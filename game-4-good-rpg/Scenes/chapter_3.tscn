@@ -18,7 +18,17 @@ script = ExtResource("7_storyguide")
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=1856198380]
 y_sort_enabled = true
+position = Vector2(2857.5, 211)
 tile_set = ExtResource("11_tileset")
+tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAA=")
+scale = Vector2(1.2, 1.2)
+
+[node name="Scenery" type="TileMapLayer" parent="."]
+y_sort_enabled = true
+position = Vector2(2857.5, 211)
+scale = Vector2(1.2, 1.2)
+tile_set = ExtResource("11_tileset")
+tile_map_data = PackedByteArray("AAAEAPj/BgAAAAEAAAAGAPf/BgABAAEAAAAIAPb/BgACAAEAAAAKAPX/BgADAAEAAAADAPb/BgADAAMAAAAFAPX/BgAEAAMAAAAHAPT/BgAFAAMAAAAJAPP/BgAGAAMAAAAKAOH/BgAAAAIAAAANAOH/BgABAAIAAAAQAOH/BgACAAIAAAATAOH/BgADAAIAAAAWAOH/BgAEAAIAAAAZAOH/BgAFAAIAAAAcAOH/BgAGAAIAAAAfAOH/BgAHAAIAAAALAP3/BgACAAMAAAAOAP3/BgADAAMAAAARAP3/BgAEAAMAAAAUAP3/BgAFAAMAAAAXAP3/BgAGAAMAAAAaAP3/BgAHAAMAAAAdAP3/BgAAAAMAAAAgAP3/BgABAAMAAAAmAOj/BgAFAAEAAAAoAOf/BgAGAAEAAAAqAOb/BgAHAAEAAAAsAOX/BgAAAAEAAAACAPH/BgAAAAAAAAAEAPD/BgABAAAAAAAGAO//BgACAAAAAAAuAOz/BgAEAAAAAAAwAOv/BgAFAAAAAAAyAOr/BgAGAAAAAAA=")
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=1856198381]
 stream = ExtResource("12_music")
@@ -34,6 +44,8 @@ parameters/looping = true
 
 [node name="Penguine" parent="." unique_id=336928026 instance=ExtResource("1_penguine")]
 z_index = 1
+y_sort_enabled = true
+position = Vector2(2857.5, 211)
 
 [node name="Camera2D2" type="Camera2D" parent="Penguine" unique_id=1255284567]
 position_smoothing_enabled = true

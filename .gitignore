@@ -1,2 +1,11 @@
 .DS_Store
 **/.DS_Store
+
+# --- debug / backup leftovers (never commit) ---
+_cleanup_backup_*/
+*.bak
+*.bak_*
+*.bak2
+*.tmp
+*.orig
+*~
