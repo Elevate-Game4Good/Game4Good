@@ -18,6 +18,9 @@
 [ext_resource type="TileSet" uid="uid://dvjknvbpfgjsk" path="res://Assets/tileset.tres" id="16_o751r"]
 [ext_resource type="PackedScene" path="res://Scenes/ui/Minimap.tscn" id="18_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/ui/MinimapObjective.tscn" id="19_marker"]
+[ext_resource type="PackedScene" path="res://character/FishingBoat/fishing_boat.tscn" id="20_boat"]
+[ext_resource type="PackedScene" path="res://character/RocksideSign/rockside_sign.tscn" id="21_sign"]
+[ext_resource type="PackedScene" path="res://character/TideObservation/tide_observation.tscn" id="22_tide"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_445iu"]
 texture = ExtResource("1_cdqkm")
@@ -299,6 +302,15 @@ position = Vector2(1978, -4210)
 
 [node name="MinimapObjective" parent="MattKaiVillagers" instance=ExtResource("19_marker")]
 objective_key = &"ch2_q4_group"
+
+[node name="FishingBoat" parent="." instance=ExtResource("20_boat")]
+position = Vector2(690, 95)
+
+[node name="RocksideSign" parent="." instance=ExtResource("21_sign")]
+position = Vector2(350, -2240)
+
+[node name="TideObservation" parent="." instance=ExtResource("22_tide")]
+position = Vector2(1830, -4100)
 
 [node name="StoryGuideLayer" type="CanvasLayer" parent="." unique_id=836113592]
 layer = 100

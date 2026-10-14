@@ -47,6 +47,9 @@ var chapter2_quest3_warehouse_done: bool = false
 var chapter2_quest4_meeting_done: bool = false
 var chapter2_sign_assembled: bool = false
 var chapter2_quest5_cleanup_done: bool = false
+var chapter2_fishing_boat_inspected: bool = false
+var chapter2_rockside_sign_read: bool = false
+var chapter2_tide_observation_done: bool = false
 var chapter2_description_shown: bool = false
 var chapter2_summary_shown: bool = false
 
@@ -131,6 +134,18 @@ func is_chapter2_quest3_complete() -> bool:
 
 func is_chapter2_complete() -> bool:
 	return is_chapter2_quest1_complete() and is_chapter2_quest2_complete() and chapter2_quest3_warehouse_done and chapter2_quest4_meeting_done and chapter2_quest5_cleanup_done
+
+
+func mark_chapter2_fishing_boat_inspected() -> void:
+	chapter2_fishing_boat_inspected = true
+
+
+func mark_chapter2_rockside_sign_read() -> void:
+	chapter2_rockside_sign_read = true
+
+
+func mark_chapter2_tide_observation_done() -> void:
+	chapter2_tide_observation_done = true
 
 
 func is_chapter3_quest1_complete() -> bool:
@@ -665,6 +680,12 @@ func to_dict() -> Dictionary:
 				chapter2_sign_assembled,
 			"quest5_cleanup_done":
 				chapter2_quest5_cleanup_done,
+			"fishing_boat_inspected":
+				chapter2_fishing_boat_inspected,
+			"rockside_sign_read":
+				chapter2_rockside_sign_read,
+			"tide_observation_done":
+				chapter2_tide_observation_done,
 			"summary_shown":
 				chapter2_summary_shown,
 			"description_shown":
@@ -972,6 +993,24 @@ func load_from_dict(data: Dictionary) -> void:
 	chapter2_quest5_cleanup_done = bool(
 		chapter_2.get(
 			"quest5_cleanup_done",
+			false
+		)
+	)
+	chapter2_fishing_boat_inspected = bool(
+		chapter_2.get(
+			"fishing_boat_inspected",
+			false
+		)
+	)
+	chapter2_rockside_sign_read = bool(
+		chapter_2.get(
+			"rockside_sign_read",
+			false
+		)
+	)
+	chapter2_tide_observation_done = bool(
+		chapter_2.get(
+			"tide_observation_done",
 			false
 		)
 	)

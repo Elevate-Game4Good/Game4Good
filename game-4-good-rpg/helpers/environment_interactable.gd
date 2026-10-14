@@ -4,11 +4,15 @@ extends Area2D
 
 const DIALOGUE := preload("res://dialogue.dialogue")
 const WATER_SORT_SCENE := preload("res://Scenes/ui/ValleyWaterSortMiniGame.tscn")
+const TIDE_OBSERVER_SCENE := preload("res://Scenes/ui/TideEcologyObserverMiniGame.tscn")
 
 enum Condition {
 	ALWAYS,
 	AFTER_QUEST5,
 	AFTER_QUEST5_NO_REPEAT,
+	AFTER_CHAPTER2_BEACH_CLEANUP,
+	AFTER_CHAPTER2_QUEST4,
+	AFTER_CHAPTER2_QUEST4_NO_REPEAT,
 }
 
 @export var dialogue_title := ""
@@ -45,6 +49,12 @@ func _is_available() -> bool:
 			return QuestState.quest5_complete
 		Condition.AFTER_QUEST5_NO_REPEAT:
 			return QuestState.quest5_complete and not QuestState.flag_minigame_watersort
+		Condition.AFTER_CHAPTER2_BEACH_CLEANUP:
+			return QuestState.chapter2_beach_cleanup_done
+		Condition.AFTER_CHAPTER2_QUEST4:
+			return QuestState.chapter2_quest4_meeting_done
+		Condition.AFTER_CHAPTER2_QUEST4_NO_REPEAT:
+			return QuestState.chapter2_quest4_meeting_done and not QuestState.chapter2_tide_observation_done
 	return false
 
 
@@ -72,7 +82,10 @@ func _update_hint() -> void:
 		return
 	talk_hint.visible = true
 	if open_minigame:
-		talk_hint_label.text = "Press Space to play Valley Water Sort"
+		if minigame_kind == "tide":
+			talk_hint_label.text = "Press Space to observe the tide"
+		else:
+			talk_hint_label.text = "Press Space to play Valley Water Sort"
 	else:
 		talk_hint_label.text = "Press Space to inspect"
 
@@ -103,11 +116,16 @@ func _open_minigame() -> void:
 	if scene == null:
 		return
 	var minigame: CanvasLayer
-	minigame = WATER_SORT_SCENE.instantiate()
+	if minigame_kind == "tide":
+		minigame = TIDE_OBSERVER_SCENE.instantiate()
+	else:
+		minigame = WATER_SORT_SCENE.instantiate()
 	scene.add_child(minigame)
 	minigame.completed.connect(_on_minigame_completed)
 
 
 func _on_minigame_completed() -> void:
-	# Mini-game done -> NPC pops a dialogue branch (back to original context).
-	DialogueManager.show_example_dialogue_balloon(DIALOGUE, "arden_watersort_start")
+	if minigame_kind == "tide":
+		DialogueManager.show_example_dialogue_balloon(DIALOGUE, "tide_observation_complete")
+	else:
+		DialogueManager.show_example_dialogue_balloon(DIALOGUE, "arden_watersort_start")

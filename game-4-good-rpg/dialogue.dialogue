@@ -472,6 +472,35 @@ do QuestState.mark_chapter2_quest5_cleanup_done()
 Villagers: The beach is cleaner and we will keep the sea protection routine going together.
 => END
 
+# ===== Chapter 2 optional coastal exploration =====
+
+~ fishing_boat_start
+Fishing boat: This small boat uses a narrow net and carries only what the village needs.
+- Why does the boat use a narrow net?
+	Fishing boat: It helps the crew avoid sweeping up young fish and damaging the seabed.
+- Taking only what is needed leaves more for tomorrow.
+	Fishing boat: Sustainable fishing keeps both the village and the ocean healthy.
+- I will remember to respect the sea's limits.
+	Fishing boat: Every careful choice helps the next generation of fishers.
+do QuestState.mark_chapter2_fishing_boat_inspected()
+=> END
+
+~ rockside_sign_start
+Rockside warning sign: Slippery rocks and fast tides ahead. Observe from a safe distance and never leave rubbish behind.
+- Why can the rocks become dangerous so quickly?
+	Rockside warning sign: A rising tide can cover the safe path within minutes.
+- Wildlife lives between these rocks too.
+	Rockside warning sign: Walk carefully and leave shells, crabs and tide pools undisturbed.
+- I will check the tide and keep the coast clean.
+	Rockside warning sign: Safe visitors can protect both themselves and the shoreline.
+do QuestState.mark_chapter2_rockside_sign_read()
+=> END
+
+~ tide_observation_complete
+Player: Low tide reveals the shore, rising water brings feeding fish, high tide covers the rocks, and the falling tide carries life back toward the sea.
+Matt: Well observed. Reading the tide helps us fish safely while giving coastal habitats time to recover.
+=> END
+
 ~ advaita_ch3_start
 Advaita: We make traditional pastries and hold thanksgiving ceremonies during the harvest festival. Thank the earth for the harvest, and thank the people around us.
 Player: Sounds so meaningful! Can I learn it?
