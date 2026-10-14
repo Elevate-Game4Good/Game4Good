@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3 uid="uid://bsign01xq01"]
+
+[ext_resource type="Script" path="res://helpers/environment_interactable.gd" id="1_env"]
+[ext_resource type="Resource" path="res://dialogue.dialogue" id="2_dlg"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_talk"]
+radius = 55.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hint"]
+bg_color = Color(0, 0, 0, 0.65)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="WoodenSign" type="Area2D"]
+collision_layer = 16
+script = ExtResource("1_env")
+dialogue_title = "sign_start"
+condition = 1
+
+[node name="Post" type="Polygon2D" parent="."]
+color = Color(0.45, 0.33, 0.2, 1)
+polygon = PackedVector2Array(-8, 16, 8, 16, 8, 60, -8, 60)
+
+[node name="Board" type="Polygon2D" parent="."]
+color = Color(0.62, 0.47, 0.3, 1)
+polygon = PackedVector2Array(-46, -26, 46, -26, 46, 20, -46, 20)
+
+[node name="BoardLine" type="Polygon2D" parent="."]
+color = Color(0.35, 0.25, 0.14, 1)
+polygon = PackedVector2Array(-38, -16, 38, -16, 38, -10, -38, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_talk")
+
+[node name="TalkHintLayer" type="CanvasLayer" parent="."]
+
+[node name="TalkHintPanel" type="PanelContainer" parent="TalkHintLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -82.0
+offset_right = 140.0
+offset_bottom = -26.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hint")
+
+[node name="TalkHintLabel" type="Label" parent="TalkHintLayer/TalkHintPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Press Space to inspect"
+horizontal_alignment = 1

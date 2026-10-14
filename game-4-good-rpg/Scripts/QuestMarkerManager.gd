@@ -20,6 +20,15 @@ const HOVER_HEIGHT := 46.0
 const BOB_AMPLITUDE := 4.0
 const BOB_SPEED := 3.0
 
+## Off-screen direction arrow (player asked for blue guidance).
+const EDGE_ARROW_COLOR := Color(0.2, 0.55, 1.0, 1.0)
+const EDGE_ARROW_OUTLINE := Color(0.05, 0.2, 0.45, 1.0)
+const EDGE_ARROW_SIZE := 16.0
+const EDGE_MARGIN := 70.0
+## Keep clear of the QuestLogUI panel on the left and the minimap on the right.
+const LEFT_SAFE := 250.0
+const RIGHT_SAFE := 240.0
+
 var _steps: Array = []
 var _layer: CanvasLayer
 var _root: Node2D
@@ -98,10 +107,35 @@ func _build_steps() -> void:
 			"targets": ["Arden_Steven_Villagers/ArdenStevenVillagersGroup"],
 			"done": func() -> bool: return QuestState.quest4_complete,
 		},
+		# Quest 5: clear the canal together with the villagers (same square group).
+		{
+			"scene": CHAPTER_1_SCENE,
+			"targets": ["Arden_Steven_Villagers/ArdenStevenVillagersGroup"],
+			"done": func() -> bool: return QuestState.quest5_complete,
+		},
 		{
 			"scene": CHAPTER_1_SCENE,
 			"targets": ["CastlePuzzleTrigger"],
 			"done": func() -> bool: return QuestState.is_chapter1_castle_puzzle_complete(),
+		},
+		# ---------------- Chapter 1.5 optional easter eggs ----------------
+		# Stone: always visible once the player reaches the village square.
+		{
+			"scene": CHAPTER_1_SCENE,
+			"targets": ["StreamStone"],
+			"done": func() -> bool: return QuestState.flag_stone_chat,
+		},
+		# Wooden sign: appears only after Quest 5 (canal cleanup) is done.
+		{
+			"scene": CHAPTER_1_SCENE,
+			"targets": ["CanalSign"],
+			"done": func() -> bool: return QuestState.flag_sign_chat or not QuestState.quest5_complete,
+		},
+		# Water-sort mini-game entrance: appears only after Quest 5, once.
+		{
+			"scene": CHAPTER_1_SCENE,
+			"targets": ["WaterSortEntrance"],
+			"done": func() -> bool: return QuestState.flag_minigame_watersort or not QuestState.quest5_complete,
 		},
 
 		# ---------------- Chapter 2 ----------------
@@ -246,8 +280,57 @@ func _on_draw() -> void:
 		# arrow drifts by exactly the camera offset.
 		var world_pos: Vector2 = (target as Node2D).global_position
 		var screen_pos: Vector2 = get_viewport().get_canvas_transform() * world_pos
+		var viewport_size := get_viewport().get_visible_rect().size
+		if _is_off_screen(screen_pos, viewport_size):
+			_draw_edge_arrow(screen_pos, viewport_size)
+			continue
 		var bob := sin(_bob_time * BOB_SPEED) * BOB_AMPLITUDE
 		_draw_arrow(screen_pos + Vector2(0.0, -HOVER_HEIGHT + bob))
+
+
+## True when the objective lies outside the visible viewport (with safe margins).
+func _is_off_screen(screen_pos: Vector2, viewport_size: Vector2) -> bool:
+	return (
+		screen_pos.x < EDGE_MARGIN or screen_pos.x > viewport_size.x - EDGE_MARGIN
+		or screen_pos.y < EDGE_MARGIN or screen_pos.y > viewport_size.y - EDGE_MARGIN
+	)
+
+
+## Blue arrow pinned at the viewport edge, pointing toward the far-away objective.
+func _draw_edge_arrow(screen_pos: Vector2, viewport_size: Vector2) -> void:
+	var center := viewport_size / 2.0
+	var direction := (screen_pos - center).normalized()
+
+	# Find where the direction ray leaves the safe rect.
+	var max_t := 1.0
+	var edge_point: Vector2 = center
+	while max_t > 0.0:
+		var probe := center + direction * ((viewport_size.length() * 0.5) * max_t)
+		if _inside_safe_rect(probe, viewport_size):
+			edge_point = probe
+			break
+		max_t -= 0.05
+
+	var arrow_angle := direction.angle()
+	var tip := edge_point + Vector2(cos(arrow_angle), sin(arrow_angle)) * EDGE_ARROW_SIZE
+	var left := edge_point + Vector2(cos(arrow_angle + 2.5), sin(arrow_angle + 2.5)) * EDGE_ARROW_SIZE
+	var right := edge_point + Vector2(cos(arrow_angle - 2.5), sin(arrow_angle - 2.5)) * EDGE_ARROW_SIZE
+	var o := 2.5
+	var o_tip := edge_point + Vector2(cos(arrow_angle), sin(arrow_angle)) * (EDGE_ARROW_SIZE + o)
+	var o_left := edge_point + Vector2(cos(arrow_angle + 2.5), sin(arrow_angle + 2.5)) * (EDGE_ARROW_SIZE + o)
+	var o_right := edge_point + Vector2(cos(arrow_angle - 2.5), sin(arrow_angle - 2.5)) * (EDGE_ARROW_SIZE + o)
+	_root.draw_colored_polygon(PackedVector2Array([o_tip, o_left, o_right]), EDGE_ARROW_OUTLINE)
+	_root.draw_colored_polygon(PackedVector2Array([tip, left, right]), EDGE_ARROW_COLOR)
+	# A small bullseye at the base helps show "this side of the screen".
+	_root.draw_circle(edge_point, 7.0, EDGE_ARROW_OUTLINE)
+	_root.draw_circle(edge_point, 4.0, EDGE_ARROW_COLOR)
+
+
+func _inside_safe_rect(point: Vector2, viewport_size: Vector2) -> bool:
+	return (
+		point.x >= LEFT_SAFE and point.x <= viewport_size.x - RIGHT_SAFE
+		and point.y >= EDGE_MARGIN and point.y <= viewport_size.y - EDGE_MARGIN
+	)
 
 
 func _draw_arrow(center: Vector2) -> void:

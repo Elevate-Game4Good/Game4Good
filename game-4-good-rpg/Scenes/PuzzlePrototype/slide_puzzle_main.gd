@@ -1,5 +1,9 @@
 extends Area2D
 
+signal puzzle_completed
+
+var _exited := false
+
 # =============================================================================
 # TEST — Giả hoàn thành puzzle castle (Achievement Badges)
 # -----------------------------------------------------------------------------
@@ -25,6 +29,7 @@ var tiles = []
 var solved = []
 var mouse = false
 var _puzzle_finished := false
+var _was_mouse_down := false
 
 func _draw() -> void:
 	var box := StyleBoxFlat.new()
@@ -68,17 +73,30 @@ func _process(_delta: float) -> void:
 		_complete_puzzle_as_test()
 		return
 
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and mouse:
-		var mouse_copy = mouse
-		mouse = false
-		var local_mouse = to_local(mouse_copy.position)
-		var rows = int(local_mouse.y / 250)
-		var cols = int(local_mouse.x / 250)
-		check_neighbours(rows, cols)
+	# Reliable click handling: detect the press edge with the global mouse
+	# position instead of relying on the Area2D input_event signal.
+	var is_mouse_down := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if is_mouse_down and not _was_mouse_down:
+		_try_click_at(get_global_mouse_position())
+	_was_mouse_down = is_mouse_down
 
-		if tiles == solved:
-			_complete_puzzle_win()
-	
+
+func _try_click_at(world_pos: Vector2) -> void:
+	var local_mouse := to_local(world_pos)
+	var rows := int(local_mouse.y / 250)
+	var cols := int(local_mouse.x / 250)
+	if rows < 0 or rows > 3 or cols < 0 or cols > 3:
+		return
+	check_neighbours(rows, cols)
+	if tiles == solved:
+		_complete_puzzle_win()
+
+
+func _input_event(viewport, event, shape_idx):
+	# Kept for compatibility; the primary input path is _process edge detection.
+	if event is InputEventMouseButton:
+		mouse = event
+
 func check_neighbours(rows, cols):
 	var empty = false
 	var done = false
@@ -129,10 +147,6 @@ func swap_tiles(tile_src, tile_dst):
 	tiles[tile_src] = tiles[tile_dst]
 	tiles[tile_dst] = temp_tile
 
-func _input_event(viewport, event, shape_idx):
-	if event is InputEventMouseButton:
-		mouse = event
-
 func _complete_puzzle_as_test() -> void:
 	print("[test] Puzzle completed (simulate_puzzle_completed).")
 	_complete_puzzle_win()
@@ -173,6 +187,13 @@ func _complete_puzzle_win() -> void:
 	_show_complete_message()
 	await get_tree().create_timer(2.0).timeout
 	_return_from_castle_puzzle()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel"):
+		if not _exited:
+			_exited = true
+			_return_from_castle_puzzle()
+
 
 func _return_from_castle_puzzle() -> void:
 	if get_tree().has_meta(CASTLE_RETURN_SCENE_META):

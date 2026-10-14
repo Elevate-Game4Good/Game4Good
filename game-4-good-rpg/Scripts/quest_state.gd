@@ -2,6 +2,7 @@ extends Node
 ## Chapter 1 progression: each quest’s main dialogue unlocks only after the previous quest’s conversations are finished.
 
 const CHAPTER_1_SCENE := "res://Chapter 1/Clear Stream Valley.tscn"
+const CHAPTER_2_SCENE := "res://Scenes/chapter_2.tscn"
 const CHAPTER1_SPRINKLER_MINIGAME_SCENE := preload("res://Scenes/ui/SprinklerInstallationMiniGame.tscn")
 
 var quest1_maggie_done: bool = false
@@ -19,6 +20,19 @@ var quest4_complete: bool = false
 var quest5_complete: bool = false
 var chapter1_sprinkler_minigame_completed: bool = false
 var _chapter1_sprinkler_minigame_ui: CanvasLayer = null
+
+# ---- Qingxi Valley 2.0: easter-egg flags & medal state ----
+var flag_stone_chat: bool = false
+var flag_sign_chat: bool = false
+var flag_minigame_watersort: bool = false
+var chapter1_medal_shown: bool = false
+var chapter1_medal_arden_done: bool = false
+
+# ---- Qingxi Valley 3.0: medal fragments (collect all 3 to unlock the fully-explored medal) ----
+var fragment_stone: bool = false
+var fragment_sign: bool = false
+var fragment_minigame: bool = false
+var _pending_fragment_tip: String = ""
 
 var chapter2_quest1_matt_done: bool = false
 var chapter2_quest1_kai_done: bool = false
@@ -253,6 +267,7 @@ func mark_quest5_complete() -> void:
 		_open_chapter1_sprinkler_minigame()
 		return
 	quest5_complete = true
+	_maybe_show_chapter1_medal()
 
 
 func _should_open_chapter1_sprinkler_minigame() -> bool:
@@ -281,6 +296,103 @@ func _on_chapter1_sprinkler_minigame_completed() -> void:
 	chapter1_sprinkler_minigame_completed = true
 	quest5_complete = true
 	_chapter1_sprinkler_minigame_ui = null
+	_maybe_show_chapter1_medal()
+
+
+## ---- Qingxi Valley 2.0 flag helpers ----
+
+func mark_stone_chat_done() -> void:
+	flag_stone_chat = true
+	fragment_stone = true
+	_pending_fragment_tip = "You obtained a Valley Water Guardian medal fragment. After the canal is cleaned, check the wooden sign — there might be a surprise there."
+	_show_medal_badge()
+
+
+func mark_sign_chat_done() -> void:
+	flag_sign_chat = true
+	fragment_sign = true
+	_pending_fragment_tip = "You have obtained one Valley Water Guardian medal fragment. Maybe you can try the mini-game at the canal entrance, there might be a nice surprise over there."
+	_show_medal_badge()
+
+
+func mark_minigame_watersort_done() -> void:
+	flag_minigame_watersort = true
+	fragment_minigame = true
+	_pending_fragment_tip = "You obtained a Valley Water Guardian medal fragment. You have collected all easter-egg fragments for this chapter. Go check your medal gallery later."
+	_show_medal_badge()
+
+
+## Reveal the in-game medal HUD after an easter-egg is finished.
+## Pop the screen-center medal popup after an easter-egg is finished.
+func _show_medal_badge() -> void:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return
+	var popup_scene := preload("res://Scenes/ui/FragmentMedalPopup.tscn")
+	var popup: CanvasLayer = popup_scene.instantiate()
+	popup.tip_text = _pending_fragment_tip
+	tree.current_scene.add_child(popup)
+
+
+## Number of Valley Water Guardian medal fragments collected (0-3).
+func get_chapter1_fragment_count() -> int:
+	var count := 0
+	if fragment_stone:
+		count += 1
+	if fragment_sign:
+		count += 1
+	if fragment_minigame:
+		count += 1
+	return count
+
+
+## Qingxi Valley 3.0: the fully-explored medal appearance unlocks only when all 3 fragments are collected.
+func is_chapter1_medal_advanced() -> bool:
+	return fragment_stone and fragment_sign and fragment_minigame
+
+
+func mark_chapter1_medal_arden_done() -> void:
+	chapter1_medal_arden_done = true
+
+
+## How many of the optional Qingxi Valley 2.0 exploration flags the player has earned.
+func get_chapter1_exploration_flag_count() -> int:
+	var count := 0
+	if flag_stone_chat:
+		count += 1
+	if flag_sign_chat:
+		count += 1
+	if flag_minigame_watersort:
+		count += 1
+	return count
+
+
+
+
+## Pop the medal window once, right after Chapter 1 main line closes.
+func _maybe_show_chapter1_medal() -> void:
+	if chapter1_medal_shown:
+		return
+	if not is_chapter1_complete():
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.current_scene == null:
+		return
+	if tree.current_scene.scene_file_path != CHAPTER_1_SCENE:
+		return
+	chapter1_medal_shown = true
+	var medal_scene := preload("res://Scenes/ui/ChapterMedalPopup.tscn")
+	var popup: CanvasLayer = medal_scene.instantiate()
+	tree.current_scene.add_child(popup)
+	popup.closed.connect(_on_chapter1_medal_closed)
+
+
+func _on_chapter1_medal_closed() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var dialogue := preload("res://dialogue.dialogue")
+	DialogueManager.show_example_dialogue_balloon(dialogue, "arden_medal_start")
 
 
 func mark_chapter2_quest1_matt_done() -> void:
@@ -515,6 +627,14 @@ func to_dict() -> Dictionary:
 			"summary_shown": chapter1_summary_shown,
 			"description_shown": chapter1_description_shown,
 			"castle_gate_shown": chapter1_castle_gate_shown,
+			"flag_stone_chat": flag_stone_chat,
+			"flag_sign_chat": flag_sign_chat,
+			"flag_minigame_watersort": flag_minigame_watersort,
+			"chapter1_medal_shown": chapter1_medal_shown,
+			"chapter1_medal_arden_done": chapter1_medal_arden_done,
+			"fragment_stone": fragment_stone,
+			"fragment_sign": fragment_sign,
+			"fragment_minigame": fragment_minigame,
 		},
 
 		"chapter_2": {
@@ -715,6 +835,54 @@ func load_from_dict(data: Dictionary) -> void:
 	chapter1_sprinkler_minigame_completed = bool(
 		chapter_1.get(
 			"sprinkler_minigame_completed",
+			false
+		)
+	)
+	flag_stone_chat = bool(
+		chapter_1.get(
+			"flag_stone_chat",
+			false
+		)
+	)
+	flag_sign_chat = bool(
+		chapter_1.get(
+			"flag_sign_chat",
+			false
+		)
+	)
+	flag_minigame_watersort = bool(
+		chapter_1.get(
+			"flag_minigame_watersort",
+			false
+		)
+	)
+	chapter1_medal_shown = bool(
+		chapter_1.get(
+			"chapter1_medal_shown",
+			false
+		)
+	)
+	chapter1_medal_arden_done = bool(
+		chapter_1.get(
+			"chapter1_medal_arden_done",
+			false
+		)
+	)
+	fragment_stone = bool(
+		chapter_1.get(
+			"fragment_stone",
+			false
+		)
+	)
+	fragment_sign = bool(
+		chapter_1.get(
+			"fragment_sign",
+			false
+		)
+	)
+	fragment_minigame = bool(
+		chapter_1.get(
+			"fragment_minigame",
 			false
 		)
 	)

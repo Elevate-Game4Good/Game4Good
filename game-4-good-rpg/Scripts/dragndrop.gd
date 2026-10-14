@@ -21,6 +21,12 @@ func _ready() -> void:
 	if sprite:
 		sprite.position = Vector2.ZERO
 		sprite.centered = true
+	# Wire the Area2D mouse events as a first input path.
+	var area := get_node_or_null("Area2D")
+	if area is Area2D:
+		(area as Area2D).input_pickable = true
+		if not (area as Area2D).input_event.is_connected(_on_area_2d_input_event):
+			(area as Area2D).input_event.connect(_on_area_2d_input_event)
 
 func _on_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	print("plank clicked: ", plank_id)
@@ -38,10 +44,36 @@ func _physics_process(delta: float) -> void:
 	else:
 		global_position = global_position.lerp(target_position, min(return_speed * delta, 1.0))
 
+## Global mouse handling: press picks the plank whose Area2D is under the mouse
+## (works even when Area2D input picking is unavailable), release drops it.
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and selected:
-		selected = false
-		check_drop_zone()
+	if placed:
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			if _mouse_over_own_area():
+				selected = true
+				z_index = 999
+				get_viewport().set_input_as_handled()
+		elif selected:
+			selected = false
+			check_drop_zone()
+
+func _mouse_over_own_area() -> bool:
+	var area := get_node_or_null("Area2D") as Area2D
+	if area == null:
+		return false
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = get_global_mouse_position()
+	query.collision_mask = area.collision_layer
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	var hits := space.intersect_point(query, 8)
+	for hit in hits:
+		if hit.get("collider") == area:
+			return true
+	return false
 
 func check_drop_zone() -> void:
 	var closest_zone: Node2D = null

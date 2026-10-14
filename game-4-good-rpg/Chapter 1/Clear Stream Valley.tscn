@@ -17,6 +17,10 @@
 [ext_resource type="PackedScene" uid="uid://dbexl2wsicxt3" path="res://Scenes/bridge_repair_trigger.tscn" id="15_bridge_trigger"]
 [ext_resource type="PackedScene" path="res://Scenes/ui/Minimap.tscn" id="16_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/ui/MinimapObjective.tscn" id="17_marker"]
+[ext_resource type="PackedScene" uid="uid://bstone01xq01" path="res://character/Stone/stone.tscn" id="18_stone"]
+[ext_resource type="PackedScene" uid="uid://bsign01xq01" path="res://character/WoodenSign/wooden_sign.tscn" id="19_sign"]
+[ext_resource type="PackedScene" uid="uid://bwsort01xq01" path="res://character/WaterSortEntrance/watersort_entrance.tscn" id="20_wsort"]
+[ext_resource type="PackedScene" uid="uid://bvilldisc01xq" path="res://character/VillagersDiscussion/discussing_villager.tscn" id="21_villdisc"]
 
 [node name="ClearStreamValley" type="Node2D" unique_id=1628794416]
 y_sort_enabled = true
@@ -137,6 +141,18 @@ position = Vector2(3216, -511)
 
 [node name="MinimapObjective" parent="CastlePuzzleTrigger" unique_id=222001802 instance=ExtResource("17_marker")]
 objective_key = &"ch1_castle"
+
+[node name="StreamStone" parent="." unique_id=1601002001 instance=ExtResource("18_stone")]
+position = Vector2(353, -324)
+
+[node name="DiscussVillager2" parent="." unique_id=1601002012 instance=ExtResource("21_villdisc")]
+position = Vector2(464, -296)
+
+[node name="CanalSign" parent="." unique_id=1601002002 instance=ExtResource("19_sign")]
+position = Vector2(2116, 237)
+
+[node name="WaterSortEntrance" parent="." unique_id=1601002003 instance=ExtResource("20_wsort")]
+position = Vector2(622, -862)
 
 [node name="StoryGuideLayer" type="CanvasLayer" parent="." unique_id=836113592]
 layer = 100

@@ -76,11 +76,40 @@ var mutation_cooldown: Timer = Timer.new()
 ## The label showing the currently spoken dialogue
 @onready var dialogue_label: DialogueLabel = %DialogueLabel
 
+## Portrait name shown above the portrait frame (Stardew-style)
+@onready var character_portrait_name: Label = %CharacterPortraitName
+
+## Portrait frame showing the currently speaking character
+@onready var character_portrait: TextureRect = %CharacterPortrait
+
 ## The menu of responses
 @onready var responses_menu: DialogueResponsesMenu = %ResponsesMenu
 
 ## Indicator to show that player can progress dialogue.
 @onready var progress: Polygon2D = %Progress
+
+## Map of character names (as they appear in dialogue.dialogue) to portrait textures.
+const CHARACTER_PORTRAITS := {
+	&"Player": "res://character/Player/south copy 2.png",
+	&"You": "res://character/Player/south copy 2.png",
+	&"Arden": "res://character/Arden/Arden.png",
+	&"Maggie": "res://character/Maggie/Maggie copy.png",
+	&"Kai": "res://character/Kai/Kai copy.png",
+	&"Jessica": "res://character/Jessica/south.png",
+	&"Steven": "res://character/Steven/south.png",
+	&"Aurora": "res://character/Aurora/south.png",
+	&"Matt": "res://character/Matt/south.png",
+	&"Traveler": "res://character/Traveller/arub_boy.png",
+	&"Friend": "res://character/Friend/White girl.png",
+	&"Adele": "res://character/Friend/White girl.png",
+	&"Family": "res://character/Family/Family.png",
+	&"Villagers": "res://character/villagers/image (1).png",
+	&"Fishing Village Residents": "res://character/FishingVillageResidents/fishing_Village.png",
+	&"Stone beside stream": "res://ui/dialogue/portrait_stone.png",
+	&"Wooden sign": "res://ui/dialogue/portrait_sign.png",
+}
+
+var _portrait_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -153,6 +182,13 @@ func apply_dialogue_line() -> void:
 	if has_character:
 		character_label.text = tr(dialogue_line.character, "dialogue")
 
+	# Stardew-style portrait: name above frame, texture inside frame.
+	character_portrait_name.visible = has_character
+	character_portrait.visible = has_character
+	if has_character:
+		character_portrait_name.text = tr(dialogue_line.character, "dialogue")
+		_set_portrait(dialogue_line.character)
+
 	dialogue_label.hide()
 	dialogue_label.dialogue_line = dialogue_line
 
@@ -185,6 +221,21 @@ func apply_dialogue_line() -> void:
 		is_waiting_for_input = true
 		balloon.focus_mode = Control.FOCUS_ALL
 		balloon.grab_focus()
+
+
+## Assigns the matching portrait texture for a character name (cached).
+func _set_portrait(character: String) -> void:
+	var path: String = CHARACTER_PORTRAITS.get(character, "")
+	if path.is_empty():
+		character_portrait.texture = null
+		return
+	if _portrait_cache.has(path):
+		character_portrait.texture = _portrait_cache[path]
+		return
+	var tex := load(path) as Texture2D
+	if tex != null:
+		_portrait_cache[path] = tex
+		character_portrait.texture = tex
 
 
 func _line_has_character_icon_tag() -> bool:
