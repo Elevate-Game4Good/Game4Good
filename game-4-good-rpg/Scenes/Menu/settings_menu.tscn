@@ -329,6 +329,59 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_lnqkc")
 text = "Save Changes"
 metadata/_edit_use_anchors_ = true
 
+[node name="SaveGame" type="Button" parent="SettingsMenu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.003780578
+anchor_top = -0.15075476
+anchor_right = 0.003780578
+anchor_bottom = -0.15075476
+offset_left = 575.0
+offset_top = 390.0
+offset_right = 843.032
+offset_bottom = 460.0
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_3fcxt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_k0qon")
+theme_override_styles/hover = SubResource("StyleBoxFlat_wv7rd")
+text = "Save Game"
+metadata/_edit_use_anchors_ = true
+
+[node name="SaveAndExit" type="Button" parent="SettingsMenu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.003780578
+anchor_top = -0.15075476
+anchor_right = 0.003780578
+anchor_bottom = -0.15075476
+offset_left = 575.0
+offset_top = 475.0
+offset_right = 843.032
+offset_bottom = 545.0
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_3fcxt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_k0qon")
+theme_override_styles/hover = SubResource("StyleBoxFlat_wv7rd")
+text = "Save & Exit"
+metadata/_edit_use_anchors_ = true
+
+[node name="SaveStatus" type="Label" parent="SettingsMenu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.003780578
+anchor_top = -0.15075476
+anchor_right = 0.003780578
+anchor_bottom = -0.15075476
+offset_left = 575.0
+offset_top = 555.0
+offset_right = 843.032
+offset_bottom = 603.0
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+metadata/_edit_use_anchors_ = true
+
 [node name="VolumeLabel" type="Label" parent="SettingsMenu" unique_id=109051328]
 layout_mode = 1
 anchors_preset = -1
@@ -382,3 +435,5 @@ metadata/_edit_use_anchors_ = true
 [connection signal="pressed" from="SettingsMenu/Close" to="." method="_on_close_pressed"]
 [connection signal="pressed" from="SettingsMenu/ChangeSkin" to="." method="_on_change_skin_pressed"]
 [connection signal="pressed" from="SettingsMenu/Save" to="." method="_on_save_pressed"]
+[connection signal="pressed" from="SettingsMenu/SaveGame" to="." method="_on_save_game_pressed"]
+[connection signal="pressed" from="SettingsMenu/SaveAndExit" to="." method="_on_save_and_exit_pressed"]

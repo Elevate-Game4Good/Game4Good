@@ -5,6 +5,9 @@ const PlayerScript = preload("res://Scripts/PlayerScript.gd")
 @onready var settings_menu = $SettingsMenu
 @onready var volume_slider = $SettingsMenu/VolumeSlider
 @onready var brightness_slider: HSlider = get_node_or_null("SettingsMenu/BrightnessSlider")
+@onready var save_game_button: Button = get_node_or_null("SettingsMenu/SaveGame")
+@onready var save_and_exit_button: Button = get_node_or_null("SettingsMenu/SaveAndExit")
+@onready var save_status_label: Label = get_node_or_null("SettingsMenu/SaveStatus")
 var music_player: AudioStreamPlayer
 var player: PlayerScript
 @onready var sfx_slider = get_node_or_null("SettingsMenu/SFXSlider")
@@ -24,6 +27,7 @@ func _ready():
 		settings_button.pressed.connect(_on_settings_button_pressed)
 	music_player = get_parent().get_node_or_null("MusicPlayer") as AudioStreamPlayer
 	player = _resolve_player()
+	_update_game_save_controls()
 	# Start with menu hidden
 	settings_menu.visible = false
 	_setup_sfx_slider()
@@ -68,6 +72,8 @@ func _set_settings_menu_open(open: bool) -> void:
 	settings_menu.visible = open
 	get_tree().paused = open
 	if open:
+		if save_status_label:
+			save_status_label.text = ""
 		if not _settings_input_locked:
 			QuestState.push_interaction_input_lock()
 			_settings_input_locked = true
@@ -109,6 +115,49 @@ func _on_close_pressed():
 	_set_settings_menu_open(false)
 
 
+func _update_game_save_controls() -> void:
+	var is_gameplay_scene := player != null
+	if save_game_button:
+		save_game_button.visible = is_gameplay_scene
+	if save_and_exit_button:
+		save_and_exit_button.visible = is_gameplay_scene
+	if save_status_label:
+		save_status_label.visible = is_gameplay_scene
+		save_status_label.text = ""
+
+
+func _on_save_game_pressed() -> void:
+	var success := SaveManager.save_game()
+	if success:
+		_set_save_status("Game saved successfully.", true)
+	else:
+		_set_save_status("Save failed. Please try again.", false)
+
+
+func _on_save_and_exit_pressed() -> void:
+	var success := SaveManager.save_game()
+	if not success:
+		_set_save_status("Save failed. The game was not closed.", false)
+		return
+	_set_save_status("Game saved. Exiting...", true)
+	if _settings_input_locked:
+		QuestState.pop_interaction_input_lock()
+		_settings_input_locked = false
+	menu_open = false
+	get_tree().paused = false
+	get_tree().quit()
+
+
+func _set_save_status(message: String, success: bool) -> void:
+	if save_status_label == null:
+		return
+	save_status_label.text = message
+	save_status_label.add_theme_color_override(
+		&"font_color",
+		Color(0.72, 0.95, 0.72) if success else Color(1.0, 0.55, 0.55)
+	)
+
+
 func _on_change_skin_pressed() -> void:
 	if player:
 		player.cycle_skin()
@@ -142,4 +191,6 @@ func _resolve_player() -> PlayerScript:
 	var found: PlayerScript = scene.get_node_or_null("Player") as PlayerScript
 	if found == null:
 		found = scene.get_node_or_null("CharacterBody2D") as PlayerScript
+	if found == null:
+		found = get_tree().get_first_node_in_group("player") as PlayerScript
 	return found

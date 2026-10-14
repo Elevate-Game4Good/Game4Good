@@ -146,6 +146,8 @@ func _capture_player_state() -> Dictionary:
 	if player == null:
 		player = scene.get_node_or_null("CharacterBody2D") as Node2D
 	if player == null:
+		player = get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
 		return {}
 	var state := {
 		"position": [player.global_position.x, player.global_position.y],
