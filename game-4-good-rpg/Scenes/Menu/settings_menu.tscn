@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b3x47hqc2tfd1"]
 
 [ext_resource type="Script" uid="uid://c55m2pptkuvkl" path="res://Chapter 1/MenuScript.gd" id="1_uit7r"]
+[ext_resource type="FontFile" path="res://Sprites/Font/VCR_OSD_MONO_1.001.ttf" id="2_settings_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8inha"]
 bg_color = Color(0.5294118, 0.6392157, 0.4627451, 1)
@@ -167,32 +168,8 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[sub_resource type="FontFile" id="FontFile_acg6e"]
-subpixel_positioning = 0
-msdf_pixel_range = 14
-msdf_size = 128
-cache/0/variation_coordinates = {}
-cache/0/face_index = 0
-cache/0/embolden = 0.0
-cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
-cache/0/spacing_top = 0
-cache/0/spacing_bottom = 0
-cache/0/spacing_space = 0
-cache/0/spacing_glyph = 0
-cache/0/baseline_offset = 0.0
-cache/0/16/0/ascent = 0.0
-cache/0/16/0/descent = 0.0
-cache/0/16/0/underline_position = 0.0
-cache/0/16/0/underline_thickness = 0.0
-cache/0/16/0/scale = 1.0
-cache/0/30/0/ascent = 0.0
-cache/0/30/0/descent = 0.0
-cache/0/30/0/underline_position = 0.0
-cache/0/30/0/underline_thickness = 0.0
-cache/0/30/0/scale = 1.0
-
 [sub_resource type="LabelSettings" id="LabelSettings_8inha"]
-font = SubResource("FontFile_acg6e")
+font = ExtResource("2_settings_font")
 font_size = 30
 shadow_size = 6
 shadow_color = Color(0, 0, 0, 0.90588236)
