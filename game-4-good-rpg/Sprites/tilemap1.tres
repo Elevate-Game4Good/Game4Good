@@ -92,6 +92,11 @@ texture_region_size = Vector2i(150, 156)
 4:1/0 = 0
 4:1/0/texture_origin = Vector2i(0, -41)
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xingyue"]
+texture = ExtResource("16_o751r")
+texture_region_size = Vector2i(2048, 2048)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_r6m3b"]
 texture = ExtResource("4_bodqr")
 texture_region_size = Vector2i(128, 64)
@@ -151,29 +156,6 @@ texture_region_size = Vector2i(428, 491)
 2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(47.158997, -75.45433, -160.34045, 32.58255, -162.05536, 173.202, -54.018433, 233.2225, -23.150757, 231.5076, 174.05939, 137.1897, 175.77435, -6.859497)
 2:1/0 = 0
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_j4lkc"]
-load_path = "res://.godot/imported/mountain.png-80d93ef6fe31e67355dd3486da9b5b78.ctex"
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_emk3k"]
-texture = SubResource("CompressedTexture2D_j4lkc")
-margins = Vector2i(97, 19)
-texture_region_size = Vector2i(1350, 976)
-0:0/0 = 0
-0:0/0/texture_origin = Vector2i(0, 300)
-0:0/0/z_index = 1
-0:0/0/y_sort_origin = -200
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-266.76654, -502.14862, -643.37805, -112.98343, -354.64252, 53.353333, 50.214844, 203.99792, 442.51843, 62.768616, 624.54736, -100.42969, 210.27466, -549.2251, 43.93799, -734.3924)
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_som4j"]
-texture = ExtResource("8_qjck3")
-margins = Vector2i(86, 23)
-texture_region_size = Vector2i(1150, 1104)
-0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-187, 426)
-0:0/0/z_index = 1
-0:0/0/y_sort_origin = -200
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-344, -496, -350.27496, -177.91745, 244.63647, 105.63849, 700.5498, -205.71704, 700.5498, -389.19437, 205.71704, -622.711)
-
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xytiles"]
 texture = ExtResource("30_xyts")
 texture_region_size = Vector2i(128, 128)
@@ -216,10 +198,28 @@ texture_region_size = Vector2i(128, 128)
 4:4/0 = 0
 5:4/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xingyue"]
-texture = ExtResource("16_o751r")
-texture_region_size = Vector2i(2048, 2048)
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_j4lkc"]
+load_path = "res://.godot/imported/mountain.png-80d93ef6fe31e67355dd3486da9b5b78.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_emk3k"]
+texture = SubResource("CompressedTexture2D_j4lkc")
+margins = Vector2i(97, 19)
+texture_region_size = Vector2i(1350, 976)
 0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 300)
+0:0/0/z_index = 1
+0:0/0/y_sort_origin = -200
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-266.76654, -502.14862, -643.37805, -112.98343, -354.64252, 53.353333, 50.214844, 203.99792, 442.51843, 62.768616, 624.54736, -100.42969, 210.27466, -549.2251, 43.93799, -734.3924)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_som4j"]
+texture = ExtResource("8_qjck3")
+margins = Vector2i(86, 23)
+texture_region_size = Vector2i(1150, 1104)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-187, 426)
+0:0/0/z_index = 1
+0:0/0/y_sort_origin = -200
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-344, -496, -350.27496, -177.91745, 244.63647, 105.63849, 700.5498, -205.71704, 700.5498, -389.19437, 205.71704, -622.711)
 
 [resource]
 tile_shape = 1
