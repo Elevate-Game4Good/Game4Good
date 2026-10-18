@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://d3mym1bceclfo"]
+
+[ext_resource type="Script" uid="uid://cqwkaxef7hqj1" path="res://Scenes/ui/Inventory/Inventory.gd" id="1_6l7ux"]
+
+[node name="Inventory" type="CanvasLayer" unique_id=715421498]
+visible = false
+script = ExtResource("1_6l7ux")
+
+[node name="Control" type="Control" parent="." unique_id=253319074]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Control" unique_id=196313244]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Control/CenterContainer" unique_id=1854848058]
+custom_minimum_size = Vector2(500, 400)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/CenterContainer/PanelContainer" unique_id=240173942]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/CenterContainer/PanelContainer/VBoxContainer" unique_id=1483896918]
+layout_mode = 2
+text = "Inventory"
+
+[node name="ItemList" type="ItemList" parent="Control/CenterContainer/PanelContainer/VBoxContainer" unique_id=57825500]
+layout_mode = 2
+size_flags_vertical = 3

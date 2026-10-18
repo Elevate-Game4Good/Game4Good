@@ -95,6 +95,14 @@ func _is_input_blocked() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_TAB or event.physical_keycode == KEY_I:
+			if not _is_input_blocked():
+				Inventory.toggle_inventory()
+			get_viewport().set_input_as_handled()
+			return
+		
 	if event.is_action_pressed("save_game"):
 		var save_success := SaveManager.save_game()
 
@@ -123,6 +131,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if _is_input_blocked():
 		return
+		
 
 	if event.is_action_pressed("ui_accept"):
 		var actionables := \

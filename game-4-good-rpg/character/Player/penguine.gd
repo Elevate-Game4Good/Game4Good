@@ -24,7 +24,12 @@ func _is_input_blocked() -> bool:
 	return is_in_dialogue or QuestState.is_story_guide_blocking_input()
 
 
-func _unhandled_input(_event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_TAB or event.keycode == KEY_I:
+			Inventory.toggle_inventory()
+			return
+	
 	if _is_input_blocked():
 		return
 
