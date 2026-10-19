@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://bm8e8bq1pys3t"]
 
 [ext_resource type="Texture2D" uid="uid://3yd3i02a5hjk" path="res://Sprites/TileMaps/Haifeng Village Tile Image.png" id="1_cdqkm"]
+[ext_resource type="AudioStream" uid="uid://bqpmtw1bhr4h" path="res://Music/Sunny Day at the Beach.mp3" id="2_53aoa"]
 [ext_resource type="Texture2D" uid="uid://bx7qscpccbq1c" path="res://Sprites/TileMaps/2.png" id="2_xwdnv"]
 [ext_resource type="Texture2D" uid="uid://csbwhfihfmmko" path="res://Sprites/TileMaps/3.png" id="3_ak6ek"]
 [ext_resource type="Texture2D" uid="uid://be1x44hpkamwo" path="res://Sprites/TileMaps/1.png" id="4_3hp6n"]
@@ -212,7 +213,13 @@ y_sort_enabled = true
 script = ExtResource("10_storyguide")
 begins_on_chapter2_map = true
 
-[node name="MinimapLayer" parent="." instance=ExtResource("18_minimap")]
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=890535939]
+stream = ExtResource("2_53aoa")
+autoplay = true
+bus = &"Music"
+parameters/looping = true
+
+[node name="MinimapLayer" parent="." unique_id=408845703 instance=ExtResource("18_minimap")]
 
 [node name="Water" type="TileMapLayer" parent="." unique_id=401339355]
 z_index = -1
@@ -266,10 +273,10 @@ z_index = 1
 y_sort_enabled = true
 position = Vector2(520, 160)
 
-[node name="Quest2MinimapObjective" parent="Matt" instance=ExtResource("19_marker")]
+[node name="Quest2MinimapObjective" parent="Matt" unique_id=1927462266 instance=ExtResource("19_marker")]
 objective_key = &"ch2_q2_matt"
 
-[node name="Quest3MinimapObjective" parent="Matt" instance=ExtResource("19_marker")]
+[node name="Quest3MinimapObjective" parent="Matt" unique_id=1221850741 instance=ExtResource("19_marker")]
 objective_key = &"ch2_q3_matt"
 
 [node name="Kai" parent="." unique_id=1417196607 instance=ExtResource("11_kai")]
@@ -277,7 +284,7 @@ z_index = 1
 y_sort_enabled = true
 position = Vector2(2100, -750)
 
-[node name="MinimapObjective" parent="Kai" instance=ExtResource("19_marker")]
+[node name="MinimapObjective" parent="Kai" unique_id=1024851841 instance=ExtResource("19_marker")]
 objective_key = &"ch2_q3_kai"
 
 [node name="Jessica" parent="." unique_id=989292783 instance=ExtResource("12_jessica")]
@@ -285,7 +292,7 @@ z_index = 1
 y_sort_enabled = true
 position = Vector2(120, -2250)
 
-[node name="MinimapObjective" parent="Jessica" instance=ExtResource("19_marker")]
+[node name="MinimapObjective" parent="Jessica" unique_id=875185394 instance=ExtResource("19_marker")]
 objective_key = &"ch2_q1_jessica"
 
 [node name="BeachCleanupPuzzle" parent="." unique_id=1959705630 instance=ExtResource("16_beach")]
@@ -300,16 +307,16 @@ z_index = 1
 y_sort_enabled = true
 position = Vector2(1978, -4210)
 
-[node name="MinimapObjective" parent="MattKaiVillagers" instance=ExtResource("19_marker")]
+[node name="MinimapObjective" parent="MattKaiVillagers" unique_id=2058856746 instance=ExtResource("19_marker")]
 objective_key = &"ch2_q4_group"
 
-[node name="FishingBoat" parent="." instance=ExtResource("20_boat")]
+[node name="FishingBoat" parent="." unique_id=770378905 instance=ExtResource("20_boat")]
 position = Vector2(690, 95)
 
-[node name="RocksideSign" parent="." instance=ExtResource("21_sign")]
+[node name="RocksideSign" parent="." unique_id=2084645655 instance=ExtResource("21_sign")]
 position = Vector2(350, -2240)
 
-[node name="TideObservation" parent="." instance=ExtResource("22_tide")]
+[node name="TideObservation" parent="." unique_id=129005157 instance=ExtResource("22_tide")]
 position = Vector2(1830, -4100)
 
 [node name="StoryGuideLayer" type="CanvasLayer" parent="." unique_id=836113592]

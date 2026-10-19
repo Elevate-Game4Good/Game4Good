@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://cqwkaxef7hqj1" path="res://Scenes/ui/Inventory/Inventory.gd" id="1_6l7ux"]
 
 [node name="Inventory" type="CanvasLayer" unique_id=715421498]
-visible = false
 script = ExtResource("1_6l7ux")
 
 [node name="Control" type="Control" parent="." unique_id=253319074]
