@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b3x47hqc2tfd1"]
 
 [ext_resource type="Script" uid="uid://c55m2pptkuvkl" path="res://Chapter 1/MenuScript.gd" id="1_uit7r"]
-[ext_resource type="FontFile" path="res://Sprites/Font/VCR_OSD_MONO_1.001.ttf" id="2_settings_font"]
+[ext_resource type="FontFile" uid="uid://cmhlvqojabk6w" path="res://Sprites/Font/VCR_OSD_MONO_1.001.ttf" id="2_settings_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8inha"]
 bg_color = Color(0.5294118, 0.6392157, 0.4627451, 1)
@@ -168,6 +168,8 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
+[sub_resource type="SystemFont" id="SystemFont_tqjwy"]
+
 [sub_resource type="LabelSettings" id="LabelSettings_8inha"]
 font = ExtResource("2_settings_font")
 font_size = 30
@@ -306,7 +308,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_lnqkc")
 text = "Save Changes"
 metadata/_edit_use_anchors_ = true
 
-[node name="SaveGame" type="Button" parent="SettingsMenu"]
+[node name="SaveGame" type="Button" parent="SettingsMenu" unique_id=1217332152]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.003780578
@@ -324,7 +326,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_wv7rd")
 text = "Save Game"
 metadata/_edit_use_anchors_ = true
 
-[node name="SaveAndExit" type="Button" parent="SettingsMenu"]
+[node name="SaveAndExit" type="Button" parent="SettingsMenu" unique_id=1285022841]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.003780578
@@ -342,7 +344,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_wv7rd")
 text = "Save & Exit"
 metadata/_edit_use_anchors_ = true
 
-[node name="SaveStatus" type="Label" parent="SettingsMenu"]
+[node name="SaveStatus" type="Label" parent="SettingsMenu" unique_id=45754638]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.003780578
@@ -370,6 +372,7 @@ offset_left = 253.0
 offset_top = 90.0
 offset_right = 401.0
 offset_bottom = 168.0
+theme_override_fonts/font = SubResource("SystemFont_tqjwy")
 text = "Music"
 label_settings = SubResource("LabelSettings_8inha")
 metadata/_edit_use_anchors_ = true

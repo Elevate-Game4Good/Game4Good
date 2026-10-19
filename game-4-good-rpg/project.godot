@@ -32,6 +32,7 @@ QuestMarkerManager="*res://Scripts/QuestMarkerManager.gd"
 QuestLogUI="*res://Scripts/QuestLogUI.gd"
 InventoryManager="*uid://bn5c0a624yre3"
 Inventory="*uid://d3mym1bceclfo"
+DialogueChoices="*uid://77fk0c7btmgb"
 
 [display]
 

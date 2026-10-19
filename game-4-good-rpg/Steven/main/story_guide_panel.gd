@@ -388,6 +388,9 @@ var final_summary_chapter_id: int = -1
 var active_guide_kind: String = ""
 ## Open dialogue balloons block quest-completion UI if we pause mid-conversation.
 var _story_dialogue_sessions: int = 0
+const MEDAL_POPUP_SCENE := "res://Scenes/ui/ChapterMedalPopup.tscn"
+var _castle_gate_pending: bool = false
+var _medal_flow_active: bool = false
 
 func _make_box(bg: Color, radius: int, border: int, border_color: Color) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
@@ -543,6 +546,11 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _medal_popup_is_open():
+		_medal_flow_active = true
+	if _castle_gate_pending and not is_guide_open and not _castle_gate_must_wait():
+		_open_chapter1_castle_gate()
+		return
 	_ch1_poll_quest2_completion_panel()
 	_ch1_poll_quest_flags_for_square_visibility()
 	_ch2_poll_quest_flags_for_cast_visibility()
@@ -1371,8 +1379,29 @@ func _advance_after_quest_completion(completed_quest_index: int) -> void:
 	_close_guide_panel()
 	call_deferred("_open_guide_for_quest", active_chapter_id, next_quest_index)
 
+func _medal_popup_is_open() -> bool:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return false
+	for child in scene.get_children():
+		if child.scene_file_path == MEDAL_POPUP_SCENE:
+			return true
+	return false
+
+func _castle_gate_must_wait() -> bool:
+	if _is_story_dialogue_active():
+		return true
+	if _medal_popup_is_open():
+		_medal_flow_active = true
+		return true
+	# Medal popup was shown this session, so wait for Arden's medal talk to finish.
+	return _medal_flow_active and not QuestState.chapter1_medal_arden_done
 
 func _open_chapter1_castle_gate() -> void:
+	if _castle_gate_must_wait():
+		_castle_gate_pending = true
+		return
+	_castle_gate_pending = false
 	panel_mode = PanelMode.CHAPTER1_CASTLE_GATE
 	active_guide_kind = ""
 	final_summary_chapter_id = 1

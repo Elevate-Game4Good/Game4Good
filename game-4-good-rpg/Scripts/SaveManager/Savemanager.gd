@@ -9,6 +9,7 @@ var _pending_player_state: Dictionary = {}
 
 
 func save_game() -> bool:
+	var dialogue_choices_node: Node = get_node_or_null("/root/DialogueChoices")
 	var save_data := {
 		"save_version": SAVE_VERSION,
 		"updated_at":
@@ -17,7 +18,7 @@ func save_game() -> bool:
 		"achievements":
 			AchievementManager.to_dict(),
 		"dialogue_choices":
-			DialogueChoices.to_dict(),
+			dialogue_choices_node.to_dict() if dialogue_choices_node != null else {},
 		"scene_path": _capture_current_scene_path(),
 		"player": _capture_player_state(),
 	}
@@ -102,9 +103,11 @@ func load_game() -> bool:
 	AchievementManager.load_from_dict(
 		achievements
 	)
-	DialogueChoices.load_from_dict(
-		dialogue_choices
-	)
+	var dialogue_choices_node: Node = get_node_or_null("/root/DialogueChoices")
+	if dialogue_choices_node != null:
+		dialogue_choices_node.load_from_dict(dialogue_choices)
+	else:
+		push_warning("[SaveManager] DialogueChoices autoload not found")
 
 	_pending_scene_path = str(save_data.get("scene_path", ""))
 	var player_dict: Variant = save_data.get("player", {})
