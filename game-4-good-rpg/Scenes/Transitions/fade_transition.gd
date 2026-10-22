@@ -5,6 +5,8 @@ extends Control
 var is_transitioning := false
 
 func _ready() -> void:
+	# Chapter guides pause gameplay while the scene is still fading in.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fade.color.a = 0.0

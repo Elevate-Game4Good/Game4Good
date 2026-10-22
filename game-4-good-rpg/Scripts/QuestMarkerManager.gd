@@ -11,7 +11,7 @@ const CHAPTER_0_SCENE := "res://Scenes/game.tscn"
 const CHAPTER_0_LEGACY_SCENE := "res://Scenes/start.tscn"
 const CHAPTER_1_SCENE := "res://Chapter 1/Clear Stream Valley.tscn"
 const CHAPTER_2_SCENE := "res://Scenes/chapter_2.tscn"
-const CHAPTER_3_SCENE := "res://Steven/main/Main.tscn"
+const CHAPTER_3_SCENE := "res://Scenes/chapter_3.tscn"
 
 const MARKER_COLOR := Color(1.0, 0.85, 0.2, 1.0)
 const MARKER_OUTLINE := Color(0.25, 0.15, 0.0, 1.0)
@@ -169,11 +169,21 @@ func _build_steps() -> void:
 		{
 			"scene": CHAPTER_3_SCENE,
 			"targets": ["Advaita", "Sarina", "Aurora"],
+			"target_flags": {
+				"Advaita": "chapter3_quest1_advaita_done",
+				"Sarina": "chapter3_quest1_sarina_done",
+				"Aurora": "chapter3_quest1_aurora_done",
+			},
 			"done": func() -> bool: return QuestState.is_chapter3_quest1_complete(),
 		},
 		{
 			"scene": CHAPTER_3_SCENE,
-			"targets": ["StarMoonCouncilGroup"],
+			"targets": ["Advaita", "Sarina", "Aurora"],
+			"target_flags": {
+				"Advaita": "chapter3_quest2_advaita_done",
+				"Sarina": "chapter3_quest2_sarina_done",
+				"Aurora": "chapter3_quest2_aurora_done",
+			},
 			"done": func() -> bool: return QuestState.chapter3_quest2_home_visits_done,
 		},
 		{
@@ -184,7 +194,14 @@ func _build_steps() -> void:
 		{
 			"scene": CHAPTER_3_SCENE,
 			"targets": ["MattKaiVillagers"],
+			"objective": "Arrange the festival with the preparation crew",
 			"done": func() -> bool: return QuestState.chapter3_quest4_town_dialogue_done,
+		},
+		{
+			"scene": CHAPTER_3_SCENE,
+			"targets": ["StarMoonCouncilGroup"],
+			"objective": "Open the festival with the council at the fountain square",
+			"done": func() -> bool: return QuestState.chapter3_quest5_celebration_done,
 		},
 	]
 
@@ -216,8 +233,9 @@ func _process(delta: float) -> void:
 	_bob_time += delta
 	if _root == null:
 		return
-	# Nothing to mark here: skip the redraw entirely.
-	if _current_targets().is_empty():
+	# Hiding also clears the last drawn arrow when a chapter is completed.
+	_root.visible = not _current_targets().is_empty()
+	if not _root.visible:
 		return
 	_root.queue_redraw()
 
@@ -249,7 +267,10 @@ func _current_targets() -> Array:
 		if done_callable.is_valid() and done_callable.call():
 			continue
 		# First unfinished step for this scene wins.
+		var target_flags: Dictionary = step.get("target_flags", {})
 		for target_path in step["targets"]:
+			if target_flags.has(target_path) and bool(QuestState.get(target_flags[target_path])):
+				continue
 			result.append(String(target_path))
 		return result
 	return result
@@ -285,7 +306,10 @@ func _on_draw() -> void:
 			_draw_edge_arrow(screen_pos, viewport_size)
 			continue
 		var bob := sin(_bob_time * BOB_SPEED) * BOB_AMPLITUDE
-		_draw_arrow(screen_pos + Vector2(0.0, -HOVER_HEIGHT + bob))
+		var hover_height := float(target.get_meta("quest_marker_height", HOVER_HEIGHT))
+		if target.has_meta("quest_marker_height"):
+			hover_height *= absf(get_viewport().get_canvas_transform().get_scale().y)
+		_draw_arrow(screen_pos + Vector2(0.0, -hover_height + bob))
 
 
 ## True when the objective lies outside the visible viewport (with safe margins).

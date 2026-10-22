@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/chapter_3.tscn" id="1_town"]
+[ext_resource type="Script" path="res://Scripts/chapter3/chapter3_preview.gd" id="2_preview"]
+
+[node name="Chapter3Preview" instance=ExtResource("1_town")]
+script = ExtResource("2_preview")

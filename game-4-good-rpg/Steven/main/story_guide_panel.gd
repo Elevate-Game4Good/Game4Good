@@ -271,7 +271,7 @@ const CHAPTER1_CASTLE_GATE_SUMMARY := {
 # |---------|-------|---------------------|
 # | 1       | res://Chapter 1/Clear Stream Valley.tscn | begins_on_chapter1_map = true |
 # | 2       | res://Scenes/chapter_2.tscn              | begins_on_chapter2_map = true |
-# | 3       | res://Steven/main/Main.tscn (temporary)  | begins_on_chapter3_map = true |
+# | 3       | res://Scenes/chapter_3.tscn             | begins_on_chapter3_map = true |
 #
 # Autoplay (auto presses Space + panel): uncomment the block in _ready() (~line 280).
 # =============================================================================
@@ -307,7 +307,7 @@ const SKIP_TO_CHAPTER_3_TEST := false
 
 const CHAPTER_1_SCENE := "res://Chapter 1/Clear Stream Valley.tscn"
 const CHAPTER_2_SCENE := "res://Scenes/chapter_2.tscn"
-const CHAPTER_3_SCENE := "res://Steven/main/Main.tscn" # TODO: replace when a dedicated Ch3 scene is available
+const CHAPTER_3_SCENE := "res://Scenes/chapter_3.tscn"
 const MENU_SCENE := "res://Scenes/Menu/menu.tscn"
 const UI_PANEL_BG := Color(0.051, 0.059, 0.078, 0.784)
 const UI_BORDER := Color(0.8, 0.8, 0.8)
@@ -319,7 +319,7 @@ const UI_GREEN_DARK := Color(0.212, 0.271, 0.173)
 @export var begins_on_chapter1_map: bool = false
 ## F6 Ch2 map: skip Ch0-Ch1 and open Ch2 Chapter Context.
 @export var begins_on_chapter2_map: bool = false
-## F6 Ch3 map (temporary Main.tscn): skip Ch0-Ch2 and open Ch3 Chapter Context.
+## F6 dedicated Ch3 map: skip Ch0-Ch2 and open Ch3 Chapter Context.
 @export var begins_on_chapter3_map: bool = false
 
 enum PanelMode {
@@ -1138,6 +1138,8 @@ func _on_story_dialogue_ended(_resource: DialogueResource) -> void:
 
 ## Brings back any "Not now" prompt after the player finishes talking to someone.
 func _reoffer_declined_prompts() -> void:
+	if not is_inside_tree() or is_queued_for_deletion():
+		return
 	if _story_dialogue_sessions > 0 or is_guide_open:
 		return
 
@@ -1194,6 +1196,9 @@ func _try_show_pending_quest_completion() -> bool:
 
 
 func _flush_pending_story_flow_checks() -> void:
+	# A dialogue may finish while FadeTransition is removing the old scene.
+	if not is_inside_tree() or is_queued_for_deletion():
+		return
 	if _story_dialogue_sessions > 0:
 		return
 	if _try_show_pending_quest_completion():

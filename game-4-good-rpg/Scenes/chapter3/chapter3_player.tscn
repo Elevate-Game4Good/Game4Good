@@ -1,0 +1,45 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/chapter3/chapter3_player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" path="res://Sprites/Player Sprites/DefaultSS/LGBT2.tres" id="2_frames"]
+
+[sub_resource type="CapsuleShape2D" id="Capsule_feet"]
+radius = 15.0
+height = 30.0
+
+[sub_resource type="CircleShape2D" id="Circle_interaction"]
+radius = 68.0
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_player")
+speed = 300
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -52)
+scale = Vector2(1.35, 1.35)
+sprite_frames = ExtResource("2_frames")
+animation = &"16 Idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -9)
+rotation = 1.5707964
+shape = SubResource("Capsule_feet")
+
+[node name="Direction" type="Marker2D" parent="."]
+
+[node name="ActionableFinder" type="Area2D" parent="Direction"]
+collision_layer = 0
+collision_mask = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Direction/ActionableFinder"]
+shape = SubResource("Circle_interaction")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.85, 0.85)
+limit_left = 1418
+limit_top = -809
+limit_right = 4297
+limit_bottom = 1231
+position_smoothing_enabled = true
+position_smoothing_speed = 7.0

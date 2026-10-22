@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/chapter3/chapter3_environment.gd" id="1_environment"]
+
+[node name="Environment" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_environment")

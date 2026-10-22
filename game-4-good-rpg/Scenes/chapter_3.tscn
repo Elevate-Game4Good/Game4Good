@@ -1,34 +1,24 @@
 [gd_scene format=3 uid="uid://c3starm00nch3"]
 
-[ext_resource type="PackedScene" uid="uid://47gn26hua6yj" path="res://character/Player/penguine.tscn" id="1_penguine"]
-[ext_resource type="PackedScene" uid="uid://cuy6xuu3igyi" path="res://character/Aurora/aurora.tscn" id="2_aurora"]
+[ext_resource type="PackedScene" path="res://Scenes/chapter3/chapter3_player.tscn" id="1_penguine"]
+[ext_resource type="PackedScene" path="res://Scenes/chapter3/aurora.tscn" id="2_aurora"]
 [ext_resource type="PackedScene" uid="uid://dh1qb5ob7m828" path="res://character/Advaita/advaita.tscn" id="3_advaita"]
 [ext_resource type="PackedScene" path="res://character/Sarina/sarina.tscn" id="4_sarina"]
-[ext_resource type="PackedScene" uid="uid://00ek6snrodnk" path="res://character/Matt_Kai_Villagers/matt_kai_villagers.tscn" id="5_mkv"]
+[ext_resource type="PackedScene" path="res://Scenes/chapter3/preparation_crew.tscn" id="5_mkv"]
 [ext_resource type="PackedScene" path="res://character/StarMoonCouncilGroup/star_moon_council_group.tscn" id="6_smcg"]
 [ext_resource type="Script" uid="uid://dbwy243yfc0pn" path="res://Steven/main/story_guide_panel.gd" id="7_storyguide"]
-[ext_resource type="PackedScene" path="res://Scenes/ui/Minimap.tscn" id="8_minimap"]
+[ext_resource type="PackedScene" path="res://Scenes/chapter3/chapter3_minimap.tscn" id="8_minimap"]
 [ext_resource type="PackedScene" path="res://Scenes/ui/MinimapObjective.tscn" id="9_marker"]
 [ext_resource type="PackedScene" uid="uid://b3x47hqc2tfd1" path="res://Scenes/Menu/settings_menu.tscn" id="10_settings"]
-[ext_resource type="TileSet" uid="uid://yps8h3kuomvk" path="res://Sprites/tilemap1.tres" id="11_tileset"]
+[ext_resource type="PackedScene" path="res://Scenes/chapter3/chapter3_environment.tscn" id="11_environment"]
 [ext_resource type="AudioStream" uid="uid://rppq1u5vnrqv" path="res://Music/A Lonely Cherry Tree.mp3" id="12_music"]
 
 [node name="Chapter 3" type="Node2D" unique_id=1851929029]
+y_sort_enabled = true
 script = ExtResource("7_storyguide")
+begins_on_chapter3_map = true
 
-[node name="Ground" type="TileMapLayer" parent="." unique_id=1856198380]
-y_sort_enabled = true
-position = Vector2(2857.5, 211)
-tile_set = ExtResource("11_tileset")
-tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAA=")
-scale = Vector2(1.2, 1.2)
-
-[node name="Scenery" type="TileMapLayer" parent="."]
-y_sort_enabled = true
-position = Vector2(2857.5, 211)
-scale = Vector2(1.2, 1.2)
-tile_set = ExtResource("11_tileset")
-tile_map_data = PackedByteArray("AAAEAPj/BgAAAAEAAAAGAPf/BgABAAEAAAAIAPb/BgACAAEAAAAKAPX/BgADAAEAAAADAPb/BgADAAMAAAAFAPX/BgAEAAMAAAAHAPT/BgAFAAMAAAAJAPP/BgAGAAMAAAAKAOH/BgAAAAIAAAANAOH/BgABAAIAAAAQAOH/BgACAAIAAAATAOH/BgADAAIAAAAWAOH/BgAEAAIAAAAZAOH/BgAFAAIAAAAcAOH/BgAGAAIAAAAfAOH/BgAHAAIAAAALAP3/BgACAAMAAAAOAP3/BgADAAMAAAARAP3/BgAEAAMAAAAUAP3/BgAFAAMAAAAXAP3/BgAGAAMAAAAaAP3/BgAHAAMAAAAdAP3/BgAAAAMAAAAgAP3/BgABAAMAAAAmAOj/BgAFAAEAAAAoAOf/BgAGAAEAAAAqAOb/BgAHAAEAAAAsAOX/BgAAAAEAAAACAPH/BgAAAAAAAAAEAPD/BgABAAAAAAAGAO//BgACAAAAAAAuAOz/BgAEAAAAAAAwAOv/BgAFAAAAAAAyAOr/BgAGAAAAAAA=")
+[node name="Environment" parent="." unique_id=1772124116 instance=ExtResource("11_environment")]
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=1856198381]
 stream = ExtResource("12_music")
@@ -42,18 +32,11 @@ parameters/looping = true
 
 [node name="CanvasLayer2" parent="CanvasLayer" unique_id=1430209240 instance=ExtResource("10_settings")]
 
-[node name="Penguine" parent="." unique_id=336928026 instance=ExtResource("1_penguine")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(2857.5, 211)
-
-[node name="Camera2D2" type="Camera2D" parent="Penguine" unique_id=1255284567]
-position_smoothing_enabled = true
+[node name="Player" parent="." unique_id=336928026 instance=ExtResource("1_penguine")]
+position = Vector2(2857.5, 911)
 
 [node name="Advaita" parent="." unique_id=1971089223 instance=ExtResource("3_advaita")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(3168, 90)
+position = Vector2(2937.5, -199)
 
 [node name="Quest1MinimapObjective" parent="Advaita" unique_id=1476299565 instance=ExtResource("9_marker")]
 objective_key = &"ch3_q1_advaita"
@@ -62,9 +45,7 @@ objective_key = &"ch3_q1_advaita"
 objective_key = &"ch3_q2_advaita"
 
 [node name="Sarina" parent="." unique_id=802349899 instance=ExtResource("4_sarina")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(3168, 330)
+position = Vector2(2207.5, 141)
 
 [node name="Quest1MinimapObjective" parent="Sarina" unique_id=839076709 instance=ExtResource("9_marker")]
 objective_key = &"ch3_q1_sarina"
@@ -73,9 +54,7 @@ objective_key = &"ch3_q1_sarina"
 objective_key = &"ch3_q2_sarina"
 
 [node name="Aurora" parent="." unique_id=1997513961 instance=ExtResource("2_aurora")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(1910, 82)
+position = Vector2(3507.5, 671)
 
 [node name="Quest1MinimapObjective" parent="Aurora" unique_id=1385362973 instance=ExtResource("9_marker")]
 objective_key = &"ch3_q1_aurora"
@@ -84,20 +63,16 @@ objective_key = &"ch3_q1_aurora"
 objective_key = &"ch3_q2_aurora"
 
 [node name="MattKaiVillagers" parent="." unique_id=1766484009 instance=ExtResource("5_mkv")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(3456, 336)
+position = Vector2(2527.5, 601)
+
+[node name="Quest4MinimapObjective" parent="MattKaiVillagers" unique_id=862872764 instance=ExtResource("9_marker")]
+objective_key = &"ch3_q4_council"
 
 [node name="StarMoonCouncilGroup" parent="." unique_id=431261155 instance=ExtResource("6_smcg")]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(3805, 340)
+position = Vector2(3807.5, 101)
 
 [node name="Quest3MinimapObjective" parent="StarMoonCouncilGroup" unique_id=933896018 instance=ExtResource("9_marker")]
 objective_key = &"ch3_q3_council"
-
-[node name="Quest4MinimapObjective" parent="StarMoonCouncilGroup" unique_id=872233602 instance=ExtResource("9_marker")]
-objective_key = &"ch3_q4_council"
 
 [node name="Quest5MinimapObjective" parent="StarMoonCouncilGroup" unique_id=591183825 instance=ExtResource("9_marker")]
 objective_key = &"ch3_q5_celebration"

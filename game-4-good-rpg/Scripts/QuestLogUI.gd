@@ -176,8 +176,9 @@ func _refresh() -> void:
     _panel.visible = true
 
     var targets: Array = step.get("targets", [])
-    var objective := _objective_for(targets)
-    var progress := _progress_for(targets)
+    var target_flags: Dictionary = step.get("target_flags", {})
+    var objective := String(step.get("objective", _objective_for(targets, target_flags)))
+    var progress := _progress_for(targets, target_flags)
 
     if objective != _last_objective:
         _objective_label.text = objective
@@ -230,10 +231,12 @@ func _current_step() -> Dictionary:
 ## target on its own line, e.g.
 ##     Talk to Maggie
 ##     Talk to Kai
-func _objective_for(targets: Array) -> String:
+func _objective_for(targets: Array, target_flags: Dictionary = {}) -> String:
     var lines: Array = []
     for target in targets:
         var key := String(target)
+        if target_flags.has(key) and _flag_is_set(String(target_flags[key])):
+            continue
         if OBJECTIVE_TEXT.has(key):
             lines.append(OBJECTIVE_TEXT[key])
         else:
@@ -244,12 +247,14 @@ func _objective_for(targets: Array) -> String:
 
 
 ## For multi-target steps, show how many are already handled, e.g. "1 / 3 done".
-func _progress_for(targets: Array) -> String:
+func _progress_for(targets: Array, target_flags: Dictionary = {}) -> String:
     if targets.size() <= 1:
         return ""
     var remaining := 0
     for target in targets:
-        if not _target_resolved(String(target)):
+        var key := String(target)
+        var resolved := _flag_is_set(String(target_flags[key])) if target_flags.has(key) else _target_resolved(key)
+        if not resolved:
             remaining += 1
     if remaining == 0:
         return ""

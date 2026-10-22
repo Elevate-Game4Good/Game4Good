@@ -110,6 +110,9 @@ func load_game() -> bool:
 		push_warning("[SaveManager] DialogueChoices autoload not found")
 
 	_pending_scene_path = str(save_data.get("scene_path", ""))
+	# Older Chapter 3 saves used the temporary Main scene.
+	if _pending_scene_path == "res://Steven/main/Main.tscn" and QuestState.chapter2_summary_shown:
+		_pending_scene_path = "res://Scenes/chapter_3.tscn"
 	var player_dict: Variant = save_data.get("player", {})
 	_pending_player_state = player_dict if player_dict is Dictionary else {}
 	print("[SaveManager] Game loaded")

@@ -1,55 +1,61 @@
 [gd_scene format=3 uid="uid://dh1qb5ob7m828"]
 
-[ext_resource type="Script" uid="uid://bbd007mef74ub" path="res://character/Friend/friend.gd" id="1_npc"]
-[ext_resource type="PackedScene" uid="uid://t8nci0q725tp" path="res://helpers/Actionable.tscn" id="2_act"]
-[ext_resource type="Resource" uid="uid://bn8tk18yvoarj" path="res://dialogue.dialogue" id="3_dlg"]
+[ext_resource type="Script" path="res://character/Friend/friend.gd" id="1_npc"]
+[ext_resource type="PackedScene" path="res://helpers/Actionable.tscn" id="2_act"]
+[ext_resource type="Resource" path="res://dialogue.dialogue" id="3_dlg"]
+[ext_resource type="Texture2D" path="res://Sprites/Import/Brown boy.png" id="tex_0"]
 
-[sub_resource type="LabelSettings" id="LabelSettings_placeholder"]
-font_size = 24
+[sub_resource type="RectangleShape2D" id="Body"]
+size = Vector2(30, 22)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(110, 127)
+[sub_resource type="CircleShape2D" id="Talk"]
+radius = 60.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_talk"]
-radius = 86.05231
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_talk_hint"]
-bg_color = Color(0, 0, 0, 0.65)
+[sub_resource type="StyleBoxFlat" id="Hint"]
+bg_color = Color(0.06, 0.14, 0.14, 0.9)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
-corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
 
-[node name="Advaita" type="StaticBody2D" unique_id=720254897]
+[node name="Advaita" type="StaticBody2D"]
 script = ExtResource("1_npc")
 
-[node name="PlaceholderBody" type="Polygon2D" parent="." unique_id=296672753]
-color = Color(0.643137, 0.419608, 0.85098, 1)
-polygon = PackedVector2Array(-52, -58, 52, -58, 52, 58, -52, 58)
+[node name="Member0" type="Sprite2D" parent="."]
+position = Vector2(0.0, -50)
+scale = Vector2(1.3, 1.3)
+texture_filter = 1
+texture = ExtResource("tex_0")
 
-[node name="PlaceholderName" type="Label" parent="." unique_id=633172321]
-offset_left = -56.0
-offset_top = -96.0
-offset_right = 56.0
-offset_bottom = -64.0
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -145.0
+offset_top = -119.0
+offset_right = 145.0
+offset_bottom = -91.0
+theme_override_colors/font_color = Color(1, 0.97, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.32, 0.3, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 17
 text = "ADVAITA"
-label_settings = SubResource("LabelSettings_placeholder")
 horizontal_alignment = 1
+mouse_filter = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=990617716]
-shape = SubResource("RectangleShape2D_body")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("Body")
 
-[node name="Actionable2" parent="." unique_id=1145157322 instance=ExtResource("2_act")]
+[node name="Actionable2" parent="." instance=ExtResource("2_act")]
 dialogue_resource = ExtResource("3_dlg")
 dialogue_start = "advaita_ch3_start"
 chapter1_gate = 6
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable2" unique_id=1541163936]
-shape = SubResource("CircleShape2D_talk")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable2"]
+shape = SubResource("Talk")
 
-[node name="TalkHintLayer" type="CanvasLayer" parent="." unique_id=166967921]
+[node name="TalkHintLayer" type="CanvasLayer" parent="."]
+layer = 92
 
-[node name="TalkHintPanel" type="PanelContainer" parent="TalkHintLayer" unique_id=66128779]
+[node name="TalkHintPanel" type="PanelContainer" parent="TalkHintLayer"]
 visible = false
 anchors_preset = 7
 anchor_left = 0.5
@@ -57,13 +63,15 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -140.0
-offset_top = -82.0
+offset_top = -84.0
 offset_right = 140.0
-offset_bottom = -26.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_talk_hint")
+offset_bottom = -40.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Hint")
 
-[node name="TalkHintLabel" type="Label" parent="TalkHintLayer/TalkHintPanel" unique_id=1191951237]
+[node name="TalkHintLabel" type="Label" parent="TalkHintLayer/TalkHintPanel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 20
 text = "Press Space to talk"
 horizontal_alignment = 1
+mouse_filter = 2

@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://character/Friend/friend.gd" id="1_npc"]
+[ext_resource type="PackedScene" path="res://helpers/Actionable.tscn" id="2_act"]
+[ext_resource type="Resource" path="res://dialogue.dialogue" id="3_dlg"]
+[ext_resource type="Script" path="res://Scripts/chapter3/chapter3_preparation_action.gd" id="4_crew_action"]
+[ext_resource type="Texture2D" path="res://character/Matt/south.png" id="tex_0"]
+[ext_resource type="Texture2D" path="res://Sprites/Import/Asian boy.png" id="tex_1"]
+
+[sub_resource type="RectangleShape2D" id="Body"]
+size = Vector2(140, 22)
+
+[sub_resource type="CircleShape2D" id="Talk"]
+radius = 60.0
+
+[sub_resource type="StyleBoxFlat" id="Hint"]
+bg_color = Color(0.06, 0.14, 0.14, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[node name="MattKaiVillagers" type="StaticBody2D"]
+script = ExtResource("1_npc")
+
+[node name="Member0" type="Sprite2D" parent="."]
+position = Vector2(-28.5, -50)
+scale = Vector2(1.3, 1.3)
+texture_filter = 1
+texture = ExtResource("tex_0")
+
+[node name="Member1" type="Sprite2D" parent="."]
+position = Vector2(28.5, -50)
+scale = Vector2(1.3, 1.3)
+texture_filter = 1
+texture = ExtResource("tex_1")
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -145.0
+offset_top = -119.0
+offset_right = 145.0
+offset_bottom = -91.0
+theme_override_colors/font_color = Color(1, 0.97, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.32, 0.3, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 17
+text = "PREPARATION CREW"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("Body")
+
+[node name="Actionable2" parent="." instance=ExtResource("2_act")]
+script = ExtResource("4_crew_action")
+dialogue_resource = ExtResource("3_dlg")
+dialogue_start = "villagers_ch3_festival_setup_start"
+chapter1_gate = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable2"]
+shape = SubResource("Talk")
+
+[node name="TalkHintLayer" type="CanvasLayer" parent="."]
+layer = 92
+
+[node name="TalkHintPanel" type="PanelContainer" parent="TalkHintLayer"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -84.0
+offset_right = 140.0
+offset_bottom = -40.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Hint")
+
+[node name="TalkHintLabel" type="Label" parent="TalkHintLayer/TalkHintPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Press Space to talk"
+horizontal_alignment = 1
+mouse_filter = 2

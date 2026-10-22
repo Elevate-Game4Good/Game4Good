@@ -22,17 +22,17 @@ buses/default_bus_layout="uid://cjms8lnubsn5m"
 [autoload]
 
 global="*uid://drpslnkubvagw"
-DialogueManager="*uid://c3rodes2l3gxb"
+DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 QuestState="*res://Scripts/quest_state.gd"
 AchievementManager="*res://Scripts/AchievementManager.gd"
-SaveManager="*uid://d0l12ry4gvne3"
-FadeTransition="*uid://c7rj22bx5ug2t"
-UiSounds="*uid://ch214dtsgc205"
+SaveManager="*res://Scripts/SaveManager/Savemanager.gd"
+FadeTransition="*res://Scenes/Transitions/Fade Transition.tscn"
+UiSounds="*res://Scripts/ui_sounds.gd"
 QuestMarkerManager="*res://Scripts/QuestMarkerManager.gd"
 QuestLogUI="*res://Scripts/QuestLogUI.gd"
-InventoryManager="*uid://bn5c0a624yre3"
-Inventory="*uid://d3mym1bceclfo"
-DialogueChoices="*uid://77fk0c7btmgb"
+InventoryManager="*res://Scripts/InventoryManager.gd"
+Inventory="*res://Scenes/ui/Inventory/Inventory.tscn"
+DialogueChoices="*res://Scripts/DialogueChoiceTracker.gd"
 
 [display]
 
