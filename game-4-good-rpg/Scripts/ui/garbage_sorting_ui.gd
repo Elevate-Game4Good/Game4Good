@@ -95,6 +95,14 @@ func close_and_complete() -> void:
 	_is_open = false
 	get_tree().paused = false
 	all_sorted.emit()
+	
+	# ---- ADDED: Mark garbage sorting done and trigger the medal popup ----
+	QuestState.mark_chapter2_beach_cleanup_done()
+	
+	var popup_scene := preload("res://Scenes/ui/FragmentMedalPopup.tscn") # Update path if your Chapter 2 medal popup uses a different scene file
+	var popup = popup_scene.instantiate()
+	get_tree().root.add_child(popup)
+	
 	queue_free()
 
 
