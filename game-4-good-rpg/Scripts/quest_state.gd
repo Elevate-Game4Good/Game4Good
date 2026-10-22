@@ -160,6 +160,61 @@ func is_chapter3_complete() -> bool:
 	return is_chapter3_quest1_complete() and chapter3_quest2_home_visits_done and chapter3_quest3_festival_setup_done and chapter3_quest4_town_dialogue_done and chapter3_quest5_celebration_done
 
 
+## Completes the active chapter without opening its normal completion panels.
+## Used by the Command+Y accessibility/testing shortcut before changing scenes.
+func complete_chapter_for_skip(chapter_id: int) -> void:
+	match chapter_id:
+		0:
+			chapter0_traveler_done = true
+			chapter0_family_done = true
+			chapter0_friend_done = true
+		1:
+			quest1_maggie_done = true
+			quest1_kai_done = true
+			quest1_jessica_done = true
+			quest2_arden_done = true
+			quest2_steven_done = true
+			quest2_aurora_done = true
+			chapter1_quest2_completion_acknowledged = true
+			quest3_complete = true
+			quest4_complete = true
+			quest5_complete = true
+			chapter1_sprinkler_minigame_completed = true
+			bridge_repaired = true
+			chapter1_description_shown = true
+			chapter1_castle_gate_shown = true
+			chapter1_summary_shown = true
+			mark_chapter1_castle_puzzle_complete()
+		2:
+			chapter2_beach_cleanup_started = true
+			chapter2_beach_cleanup_done = true
+			chapter2_quest1_matt_done = true
+			chapter2_quest1_kai_done = true
+			chapter2_quest1_jessica_done = true
+			chapter2_quest2_residents_done = true
+			chapter2_quest3_matt_done = true
+			chapter2_quest3_kai_done = true
+			chapter2_quest3_warehouse_done = true
+			chapter2_quest4_meeting_done = true
+			chapter2_sign_assembled = true
+			chapter2_quest5_cleanup_done = true
+			chapter2_description_shown = true
+			chapter2_summary_shown = true
+		3:
+			chapter3_quest1_advaita_done = true
+			chapter3_quest1_sarina_done = true
+			chapter3_quest1_aurora_done = true
+			chapter3_quest2_advaita_done = true
+			chapter3_quest2_sarina_done = true
+			chapter3_quest2_aurora_done = true
+			chapter3_quest2_home_visits_done = true
+			chapter3_quest3_festival_setup_done = true
+			chapter3_quest4_town_dialogue_done = true
+			chapter3_quest5_celebration_done = true
+			chapter3_description_shown = true
+			chapter3_summary_shown = true
+
+
 func is_minimap_objective_active(objective_key: StringName) -> bool:
 	match objective_key:
 		&"ch0_traveller":
