@@ -34,6 +34,7 @@ InventoryManager="*res://Scripts/InventoryManager.gd"
 Inventory="*res://Scenes/ui/Inventory/Inventory.tscn"
 DialogueChoices="*res://Scripts/DialogueChoiceTracker.gd"
 ChapterSkipController="*res://Scripts/chapter_skip_controller.gd"
+ActivityJumpMenu="*res://Scripts/activity_jump_menu.gd"
 
 [display]
 
