@@ -18,7 +18,7 @@ y_sort_enabled = true
 script = ExtResource("7_storyguide")
 begins_on_chapter3_map = true
 
-[node name="Environment" parent="." unique_id=1772124116 instance=ExtResource("11_environment")]
+[node name="Environment" parent="." instance=ExtResource("11_environment")]
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=1856198381]
 stream = ExtResource("12_music")
@@ -65,7 +65,7 @@ objective_key = &"ch3_q2_aurora"
 [node name="MattKaiVillagers" parent="." unique_id=1766484009 instance=ExtResource("5_mkv")]
 position = Vector2(2527.5, 601)
 
-[node name="Quest4MinimapObjective" parent="MattKaiVillagers" unique_id=862872764 instance=ExtResource("9_marker")]
+[node name="Quest4MinimapObjective" parent="MattKaiVillagers" instance=ExtResource("9_marker")]
 objective_key = &"ch3_q4_council"
 
 [node name="StarMoonCouncilGroup" parent="." unique_id=431261155 instance=ExtResource("6_smcg")]

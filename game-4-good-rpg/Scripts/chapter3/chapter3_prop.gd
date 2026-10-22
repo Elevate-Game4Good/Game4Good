@@ -1,13 +1,22 @@
 extends Node2D
-## Code-drawn props use a foot origin, matching the characters' Y sorting.
-## Only the fountain animates continuously; static props redraw on phase changes.
+## Pixel-grid props share the ochre outlines, gold highlights and timber shadows
+## of the existing house sprites. Festival state and footprints remain separate.
 
 @export_enum("fountain", "stage", "food", "ritual", "bench", "lantern") var kind := "fountain"
+const INK := Color("70472c")
+const GOLD := Color("f0ca7d")
+const WOOD := Color("bb8548")
+const LIGHT_WOOD := Color("d9a65c")
+const DARK_WOOD := Color("915b34")
+const WATER := Color("3ca5b0")
+const GRID := 4.0
 var phase := 0
 var _time := 0.0
+var _tick := 0.0
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	set_process(kind == "fountain")
 
 
@@ -17,8 +26,11 @@ func set_phase(value: int) -> void:
 
 
 func _process(delta: float) -> void:
-	_time += delta
-	queue_redraw()
+	_tick += delta
+	if _tick >= 0.16:
+		_tick = 0
+		_time += 0.16
+		queue_redraw()
 
 
 func _draw() -> void:
@@ -32,121 +44,195 @@ func _draw() -> void:
 
 
 func _draw_fountain() -> void:
-	_ellipse(Vector2(12, -8), Vector2(145, 57), Color(0.25, 0.22, 0.17, 0.16))
-	_ellipse(Vector2(0, -34), Vector2(133, 77), Color("a58969"))
-	_ellipse(Vector2(0, -48), Vector2(133, 77), Color("dfcda9"))
-	_ellipse(Vector2(0, -53), Vector2(116, 65), Color("4f9eaa"))
-	_ellipse(Vector2(0, -55), Vector2(107, 57), Color("78c8c2"))
+	_ellipse(Vector2(12, -4), Vector2(145, 57), Color(0.42, 0.28, 0.14, 0.22))
+	_ellipse(Vector2(0, -30), Vector2(136, 78), INK)
+	_ellipse(Vector2(0, -36), Vector2(132, 74), Color("b88049"))
+	_ellipse(Vector2(0, -48), Vector2(132, 76), GOLD)
+	_ellipse(Vector2(0, -52), Vector2(118, 64), INK)
+	_ellipse(Vector2(0, -56), Vector2(112, 58), Color("287b90"))
+	_ellipse(Vector2(0, -60), Vector2(104, 52), WATER)
+	for x in [-92, -48, 0, 48, 92]:
+		_line(Vector2(x, -3), Vector2(x, 15), Color("a36b3f"))
 	for i in range(3):
-		var r := 35.0 + fmod(_time * 12 + i * 24, 70)
-		draw_arc(Vector2(0, -57), r, 0.1, PI - 0.1, 24, Color(0.86, 1, 0.94, 0.4), 2, true)
-	draw_rect(Rect2(-19, -150, 38, 92), Color("c2b28e"))
-	_ellipse(Vector2(0, -144), Vector2(57, 25), Color("eee1bb"))
-	_ellipse(Vector2(0, -150), Vector2(46, 17), Color("78c8c2"))
-	draw_line(Vector2(0, -150), Vector2(0, -195 + sin(_time * 3) * 4), Color("b6ede0"), 9, true)
-	draw_circle(Vector2(0, -195), 8, Color("d4f5df"))
+		var radius := 30.0 + fmod(_time * 16 + i * 25, 72)
+		_arc(Vector2(0, -60), Vector2(radius, radius * 0.42), 0.1, PI - 0.1, Color("95dbcf"))
+	_box(Rect2(-20, -152, 40, 96), Color("d5ad64"))
+	_rect(Rect2(-12, -144, 8, 76), Color("f2d285"))
+	_rect(Rect2(12, -144, 4, 76), Color("ac783f"))
+	_ellipse(Vector2(0, -144), Vector2(60, 28), INK)
+	_ellipse(Vector2(0, -148), Vector2(56, 24), GOLD)
+	_ellipse(Vector2(0, -152), Vector2(44, 16), WATER)
+	_line(Vector2(0, -156), Vector2(0, -188 - int(_time * 3) % 2 * 4), Color("9cddd1"), 8)
+	_ellipse(Vector2(0, -192), Vector2(8, 8), Color("beeade"))
 
 
 func _draw_stage() -> void:
-	_ellipse(Vector2(5, 5), Vector2(235, 63), Color(0.25, 0.22, 0.17, 0.16))
-	draw_rect(Rect2(-225, -58, 450, 66), Color("8d5b43"))
-	draw_colored_polygon(PackedVector2Array([Vector2(-225, -58), Vector2(-190, -150), Vector2(190, -150), Vector2(225, -58)]), Color("c59665"))
-	for i in range(9):
-		draw_line(Vector2(-200 + i * 50, -60), Vector2(-173 + i * 43, -146), Color("a8754d"), 2, true)
-	draw_rect(Rect2(-75, 8, 150, 16), Color("b88b60"))
+	_ellipse(Vector2(8, 8), Vector2(236, 64), Color(0.42, 0.28, 0.14, 0.22))
+	_box(Rect2(-228, -60, 456, 72), DARK_WOOD)
+	for x in range(-216, 218, 36):
+		_rect(Rect2(x, -52, 28, 52), WOOD)
+		_rect(Rect2(x + 4, -44, 4, 24), LIGHT_WOOD)
+		_line(Vector2(x + 20, -20), Vector2(x + 20, -8), Color("a56f3b"))
+	_polygon(PackedVector2Array([Vector2(-228, -60), Vector2(-192, -152), Vector2(192, -152), Vector2(228, -60)]), LIGHT_WOOD)
+	for i in range(10):
+		_line(Vector2(-208 + i * 44, -64), Vector2(-176 + i * 38, -148), Color("ac793f"))
+	_line(Vector2(-224, -60), Vector2(224, -60), GOLD)
+	_box(Rect2(-80, 12, 160, 16), WOOD)
+	_line(Vector2(-72, 12), Vector2(72, 12), GOLD)
 	if phase == 0:
-		_crate(Vector2(-145, -100))
-		_crate(Vector2(115, -94))
+		_crate(Vector2(-144, -104))
+		_crate(Vector2(116, -96))
 		return
-	draw_rect(Rect2(-202, -282, 13, 210), Color("866247"))
-	draw_rect(Rect2(189, -282, 13, 210), Color("866247"))
-	draw_rect(Rect2(-205, -290, 410, 22), Color("95734e"))
+	_box(Rect2(-204, -288, 16, 216), DARK_WOOD)
+	_box(Rect2(188, -288, 16, 216), DARK_WOOD)
+	_box(Rect2(-208, -296, 416, 28), WOOD)
+	_line(Vector2(-200, -288), Vector2(196, -288), GOLD)
 	if phase >= 2:
-		draw_rect(Rect2(-188, -267, 75, 150), Color("a6505c"))
-		draw_rect(Rect2(113, -267, 75, 150), Color("a6505c"))
-		for x in [-170, -145, 130, 155]:
-			draw_line(Vector2(x, -265), Vector2(x, -120), Color("c57171"), 5, true)
-		_bunting(Vector2(-180, -270), Vector2(180, -270))
-		# Musical instruments prepared for the shared performance.
-		draw_circle(Vector2(-105, -135), 24, Color("b8784e"))
-		draw_circle(Vector2(-105, -139), 18, Color("ead5a5"))
-		draw_line(Vector2(100, -125), Vector2(100, -195), Color("41646b"), 6, true)
-		draw_circle(Vector2(100, -199), 11, Color("41646b"))
+		_box(Rect2(-188, -268, 76, 152), Color("af583d"))
+		_box(Rect2(112, -268, 76, 152), Color("af583d"))
+		for x in [-172, -148, 128, 152]:
+			_rect(Rect2(x, -260, 8, 136), Color("cc7549"))
+		_bunting(Vector2(-180, -268), Vector2(180, -268))
+		_ellipse(Vector2(-104, -136), Vector2(28, 24), INK)
+		_ellipse(Vector2(-104, -140), Vector2(24, 20), Color("c18a4b"))
+		_ellipse(Vector2(-104, -144), Vector2(20, 12), GOLD)
+		_line(Vector2(100, -124), Vector2(100, -192), INK, 8)
+		_ellipse(Vector2(100, -200), Vector2(12, 12), Color("648872"))
 
 
 func _draw_food() -> void:
-	_ellipse(Vector2(8, -1), Vector2(114, 34), Color(0.25, 0.22, 0.17, 0.15))
-	draw_rect(Rect2(-100, -95, 200, 95), Color("a67650"))
-	draw_rect(Rect2(-108, -106, 216, 20), Color("dbb681"))
-	for x in [-92, 82]:
-		draw_rect(Rect2(x, -231, 10, 146), Color("805c45"))
+	_ellipse(Vector2(8, 0), Vector2(116, 36), Color(0.42, 0.28, 0.14, 0.22))
+	_box(Rect2(-100, -96, 200, 100), WOOD)
+	for x in range(-92, 100, 28):
+		_rect(Rect2(x, -84, 20, 76), LIGHT_WOOD)
+		_line(Vector2(x + 4, -72), Vector2(x + 4, -24), Color("c4904e"))
+	_box(Rect2(-108, -108, 216, 20), GOLD)
+	for x in [-92, 80]:
+		_box(Rect2(x, -236, 12, 148), DARK_WOOD)
 	if phase == 0:
-		_crate(Vector2(-48, -117))
+		_crate(Vector2(-48, -120))
 		return
 	for i in range(6):
-		var color := Color("568d94") if i % 2 == 0 else Color("f4e4b8")
-		draw_colored_polygon(PackedVector2Array([Vector2(-114 + i * 38, -236), Vector2(-76 + i * 38, -236), Vector2(-63 + i * 42, -180), Vector2(-105 + i * 42, -180)]), color)
+		var color := Color("648c70") if i % 2 == 0 else Color("f0d48f")
+		_polygon(PackedVector2Array([Vector2(-116 + i * 38, -240), Vector2(-78 + i * 38, -240), Vector2(-64 + i * 42, -180), Vector2(-106 + i * 42, -180)]), color)
+		_rect(Rect2(-108 + i * 40, -184, 36, 12), color.darkened(0.13))
 	if phase >= 2:
 		for i in range(6):
-			var p := Vector2(-72 + i * 28, -112)
-			draw_circle(p, 12, Color("edcd80"))
-			draw_arc(p, 7, 0.2, 2.9, 10, Color("b57a47"), 2, true)
+			var p := Vector2(-72 + i * 28, -116)
+			_ellipse(p, Vector2(12, 12), INK)
+			_ellipse(p + Vector2(0, -4), Vector2(12, 8), GOLD)
+			_rect(Rect2(p + Vector2(-4, -8), Vector2(8, 4)), Color("fff0b0"))
 		for i in range(4):
-			draw_circle(Vector2(-56 + i * 36, -132), 10, Color("d18a52"))
+			_ellipse(Vector2(-56 + i * 36, -136), Vector2(12, 12), Color("c9823f"))
+			_rect(Rect2(-60 + i * 36, -144, 4, 4), Color("f3cb74"))
 
 
 func _draw_ritual() -> void:
-	_ellipse(Vector2(0, -45), Vector2(170, 75), Color("c9b58d"))
-	_ellipse(Vector2(0, -51), Vector2(156, 65), Color("eee0bb"))
-	draw_rect(Rect2(-106, -80, 212, 40), Color("718b83"))
-	draw_rect(Rect2(-92, -72, 184, 24), Color("d9c28f"))
+	_ellipse(Vector2(0, -44), Vector2(172, 76), Color("b98649"))
+	_ellipse(Vector2(0, -52), Vector2(160, 68), GOLD)
+	for x in range(-128, 130, 32):
+		_line(Vector2(x, -16), Vector2(x + 16, -32), Color("d6a562"))
+	_box(Rect2(-108, -84, 216, 44), Color("9b623b"))
+	_rect(Rect2(-96, -76, 192, 28), Color("bd7748"))
+	for x in range(-80, 88, 24):
+		_rect(Rect2(x, -72, 8, 20), GOLD)
 	for x in [-128, 128]:
-		draw_rect(Rect2(x - 6, -150, 12, 105), Color("a47950"))
-		draw_circle(Vector2(x, -157), 15, Color("e3c15f"))
+		_box(Rect2(x - 8, -152, 16, 108), WOOD)
+		_ellipse(Vector2(x, -160), Vector2(16, 16), INK)
+		_ellipse(Vector2(x, -164), Vector2(12, 12), GOLD)
 	if phase >= 1:
-		for x in [-55, 0, 55]:
-			draw_circle(Vector2(x, -82), 17, Color("b98b52"))
+		for x in [-56, 0, 56]:
+			_ellipse(Vector2(x, -84), Vector2(20, 16), INK)
+			_ellipse(Vector2(x, -88), Vector2(16, 12), WOOD)
 			for i in range(3):
-				draw_circle(Vector2(x - 9 + i * 9, -91), 8, Color("e4bb55"))
+				_ellipse(Vector2(x - 8 + i * 8, -96), Vector2(8, 8), Color("ecc266"))
 	if phase >= 2:
-		_bunting(Vector2(-128, -155), Vector2(128, -155))
+		_bunting(Vector2(-128, -156), Vector2(128, -156))
 
 
 func _draw_bench() -> void:
-	for x in [-43, 43]:
-		draw_rect(Rect2(x - 5, -30, 10, 32), Color("735b44"))
-	draw_rect(Rect2(-61, -58, 122, 17), Color("aa8055"))
-	draw_rect(Rect2(-64, -31, 128, 18), Color("c49d6b"))
+	for x in [-44, 44]:
+		_box(Rect2(x - 4, -32, 12, 36), DARK_WOOD)
+	_box(Rect2(-64, -60, 128, 20), WOOD)
+	_line(Vector2(-56, -56), Vector2(56, -56), GOLD)
+	_box(Rect2(-68, -32, 136, 20), LIGHT_WOOD)
+	_line(Vector2(-60, -28), Vector2(60, -28), GOLD)
 
 
 func _draw_lantern() -> void:
-	draw_rect(Rect2(-4, -150, 8, 150), Color("856a4b"))
+	_box(Rect2(-4, -152, 12, 156), WOOD)
 	if phase < 2:
 		return
 	if phase == 3:
-		draw_circle(Vector2(0, -142), 40, Color(1, 0.83, 0.4, 0.12))
-	draw_circle(Vector2(0, -142), 18, Color("f2d58a"))
-	draw_line(Vector2(-13, -142), Vector2(13, -142), Color("b48a56"), 2, true)
-	draw_line(Vector2(0, -125), Vector2(0, -110), Color("a65d59"), 3, true)
+		_ellipse(Vector2(0, -144), Vector2(36, 32), Color(1, 0.79, 0.32, 0.12))
+	_ellipse(Vector2(0, -144), Vector2(20, 20), INK)
+	_ellipse(Vector2(0, -144), Vector2(16, 16), Color("edbd66"))
+	_rect(Rect2(-8, -152, 8, 12), Color("f9dd8d"))
+	_line(Vector2(-12, -144), Vector2(12, -144), Color("c08a43"))
+	_line(Vector2(0, -124), Vector2(0, -108), Color("b35e3f"))
 
 
 func _crate(pos: Vector2) -> void:
-	draw_rect(Rect2(pos - Vector2(23, 0), Vector2(46, 32)), Color("b48b5b"))
-	draw_rect(Rect2(pos - Vector2(23, 0), Vector2(46, 32)), Color("855f42"), false, 3)
-	draw_line(pos + Vector2(-20, 3), pos + Vector2(20, 29), Color("855f42"), 3)
+	_box(Rect2(pos - Vector2(24, 0), Vector2(48, 32)), WOOD)
+	_line(pos + Vector2(-16, 4), pos + Vector2(16, 28), GOLD)
+	_line(pos + Vector2(-16, 28), pos + Vector2(16, 4), DARK_WOOD)
 
 
 func _bunting(a: Vector2, b: Vector2) -> void:
-	draw_line(a, b, Color("79674d"), 2, true)
-	var colors := [Color("be6f69"), Color("64949a"), Color("e6bc61")]
+	_line(a, b, INK)
+	var colors := [Color("c46b43"), Color("698d61"), Color("ecc265")]
 	for i in range(9):
 		var p := a.lerp(b, (i + 0.5) / 9.0)
-		draw_colored_polygon(PackedVector2Array([p + Vector2(-10, 2), p + Vector2(10, 2), p + Vector2(0, 24)]), colors[i % 3])
+		_polygon(PackedVector2Array([p + Vector2(-12, 4), p + Vector2(12, 4), p + Vector2(0, 24)]), colors[i % 3])
+
+
+func _box(rect: Rect2, color: Color) -> void:
+	_rect(rect, INK)
+	_rect(rect.grow(-4), color)
+
+
+func _rect(rect: Rect2, color: Color) -> void:
+	draw_rect(Rect2(rect.position.snapped(Vector2.ONE * GRID), rect.size.snapped(Vector2.ONE * GRID)), color)
 
 
 func _ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
-	var points := PackedVector2Array()
-	for i in range(40):
-		var a := TAU * i / 40.0
-		points.append(center + Vector2(cos(a), sin(a)) * radius)
-	draw_colored_polygon(points, color)
+	for y in range(-int(radius.y), int(radius.y) + 1, 4):
+		var normal_y := float(y) / radius.y
+		var half_width := floorf(radius.x * sqrt(maxf(0, 1 - normal_y * normal_y)) / GRID) * GRID
+		_rect(Rect2(center + Vector2(-half_width, y), Vector2(maxf(4, half_width * 2), 4)), color)
+
+
+func _line(a: Vector2, b: Vector2, color: Color, width := 4.0) -> void:
+	var steps := maxi(1, ceili(maxf(absf(b.x - a.x), absf(b.y - a.y)) / GRID))
+	for i in range(steps + 1):
+		var p := a.lerp(b, float(i) / steps).snapped(Vector2.ONE * GRID)
+		_rect(Rect2(p, Vector2.ONE * width), color)
+
+
+func _arc(center: Vector2, radius: Vector2, start: float, end: float, color: Color) -> void:
+	var previous := center + Vector2(cos(start), sin(start)) * radius
+	for i in range(1, 21):
+		var angle := lerpf(start, end, i / 20.0)
+		var point := center + Vector2(cos(angle), sin(angle)) * radius
+		_line(previous, point, color)
+		previous = point
+
+
+func _polygon(points: PackedVector2Array, color: Color) -> void:
+	var min_y := points[0].y
+	var max_y := min_y
+	for point in points:
+		min_y = minf(min_y, point.y)
+		max_y = maxf(max_y, point.y)
+	for y in range(floori(min_y / GRID) * 4, ceili(max_y / GRID) * 4, 4):
+		var intersections: Array[float] = []
+		for i in range(points.size()):
+			var a := points[i]
+			var b := points[(i + 1) % points.size()]
+			if (a.y <= y and b.y > y) or (b.y <= y and a.y > y):
+				intersections.append(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y))
+		intersections.sort()
+		for i in range(0, intersections.size() - 1, 2):
+			_rect(Rect2(intersections[i], y, intersections[i + 1] - intersections[i], 4), color)
+	for i in range(points.size()):
+		_line(points[i], points[(i + 1) % points.size()], INK)
