@@ -2,6 +2,16 @@ extends CanvasLayer
 
 signal sign_assembly_completed
 
+# --- Shared UI style (same values as the settings menu / story guide / puzzles) ---
+const UI_FONT: Font = preload("res://Sprites/Font/VCR_OSD_MONO_1.001.ttf")
+const UI_PANEL_BG := Color(0.051, 0.059, 0.078, 0.784)
+const UI_BORDER := Color(0.8, 0.8, 0.8)
+const UI_GREEN := Color(0.529, 0.639, 0.463)
+const UI_GREEN_HOVER := Color(0.396, 0.494, 0.337)
+const UI_GREEN_DARK := Color(0.212, 0.271, 0.173)
+const UI_GOLD := Color(1.0, 0.85, 0.45)
+const UI_SLOT_EMPTY := Color(0.05, 0.06, 0.08, 0.9)
+
 @onready var helper_label: Label = $Root/Panel/MarginContainer/MainVBox/HelperLabel
 @onready var slot_1: Button = $Root/Panel/MarginContainer/MainVBox/SlotsRow/SignSlot1
 @onready var slot_2: Button = $Root/Panel/MarginContainer/MainVBox/SlotsRow/SignSlot2
@@ -24,6 +34,7 @@ func _ready() -> void:
 	_apply_process_mode_recursive(self, Node.PROCESS_MODE_ALWAYS)
 	layer = 130
 	_configure_mouse_filters()
+	_apply_style()
 	QuestState.push_interaction_input_lock()
 	_bind_piece(piece_protect, "Protect")
 	_bind_piece(piece_the_blue, "the Blue")
@@ -37,6 +48,126 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	QuestState.pop_interaction_input_lock()
 
+
+# =============================================================================
+# STYLE
+# =============================================================================
+
+func _make_box(bg: Color, radius: int, border: int, border_color: Color) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = bg
+	box.border_color = border_color
+	box.set_border_width_all(border)
+	box.set_corner_radius_all(radius)
+	return box
+
+
+func _focus_box() -> StyleBoxFlat:
+	var box := _make_box(Color(0, 0, 0, 0), 10, 3, Color.WHITE)
+	box.draw_center = false
+	return box
+
+
+func _set_button_styles(button: Button, normal: StyleBox, hover: StyleBox, pressed: StyleBox, disabled: StyleBox) -> void:
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+	button.add_theme_stylebox_override("focus", _focus_box())
+
+
+## Empty sign slot: dark box that lights up green on hover.
+func _style_slot_empty(button: Button) -> void:
+	_set_button_styles(
+		button,
+		_make_box(UI_SLOT_EMPTY, 10, 3, UI_BORDER),
+		_make_box(Color(0.12, 0.14, 0.18, 0.95), 10, 3, UI_GREEN),
+		_make_box(UI_GREEN_DARK, 10, 3, UI_GREEN),
+		_make_box(UI_SLOT_EMPTY, 10, 3, UI_BORDER)
+	)
+
+
+## Slot after a correct piece was placed: solid green.
+func _style_slot_filled(button: Button) -> void:
+	var filled := _make_box(UI_GREEN, 10, 3, UI_BORDER)
+	_set_button_styles(button, filled, filled, filled, filled)
+	button.add_theme_color_override("font_disabled_color", Color.WHITE)
+
+
+## Piece button: green like every other button; gold border while selected.
+func _style_piece_button(button: Button, selected: bool = false) -> void:
+	var normal: StyleBoxFlat
+	if selected:
+		normal = _make_box(UI_GREEN_HOVER, 10, 4, UI_GOLD)
+	else:
+		normal = _make_box(UI_GREEN, 10, 3, UI_BORDER)
+	_set_button_styles(
+		button,
+		normal,
+		_make_box(UI_GREEN_HOVER, 10, 3, UI_BORDER),
+		_make_box(UI_GREEN_DARK, 10, 3, UI_BORDER),
+		_make_box(UI_GREEN_DARK, 10, 3, Color(0.5, 0.5, 0.5))
+	)
+	button.add_theme_color_override("font_disabled_color", Color(0.75, 0.75, 0.75))
+
+
+func _apply_font_recursive(node: Node) -> void:
+	if node is Label or node is Button:
+		(node as Control).add_theme_font_override("font", UI_FONT)
+	for child in node.get_children():
+		_apply_font_recursive(child)
+
+
+func _apply_style() -> void:
+	_apply_font_recursive($Root/Panel)
+	$Root/Dimmer.color = Color(0.02, 0.03, 0.04, 0.65)
+
+	var panel: PanelContainer = $Root/Panel
+	panel.add_theme_stylebox_override("panel", _make_box(UI_PANEL_BG, 20, 4, UI_BORDER))
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	panel.offset_left = -430.0
+	panel.offset_right = 430.0
+	panel.offset_top = -230.0
+	panel.offset_bottom = 230.0
+
+	var margin: MarginContainer = $Root/Panel/MarginContainer
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 30)
+
+	var vbox: VBoxContainer = $Root/Panel/MarginContainer/MainVBox
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 18)
+
+	var title: Label = vbox.get_node("TitleLabel")
+	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	title.add_theme_constant_override("shadow_offset_x", 2)
+	title.add_theme_constant_override("shadow_offset_y", 2)
+
+	(vbox.get_node("BoardLabel") as Label).add_theme_font_size_override("font_size", 18)
+
+	helper_label.add_theme_font_size_override("font_size", 18)
+	helper_label.add_theme_color_override("font_color", UI_GOLD)
+
+	var pieces_title: Label = vbox.get_node("PiecesTitle")
+	pieces_title.add_theme_font_size_override("font_size", 20)
+	pieces_title.add_theme_color_override("font_color", UI_GREEN)
+
+	for slot: Button in [slot_1, slot_2, slot_3]:
+		slot.custom_minimum_size = Vector2(240, 72)
+		slot.add_theme_font_size_override("font_size", 20)
+		_style_slot_empty(slot)
+
+	for piece: Button in [piece_protect, piece_the_blue, piece_coast]:
+		piece.custom_minimum_size = Vector2(200, 60)
+		piece.add_theme_font_size_override("font_size", 22)
+		_style_piece_button(piece)
+
+
+# =============================================================================
+# PUZZLE LOGIC
+# =============================================================================
 
 func _configure_mouse_filters() -> void:
 	var root: Control = $Root
@@ -91,12 +222,8 @@ func _refresh_piece_highlight() -> void:
 	]
 	for entry in pieces:
 		var button: Button = entry["button"]
-		if button.disabled:
-			button.modulate = Color(0.75, 0.75, 0.75, 1.0)
-		elif entry["text"] == _selected_piece:
-			button.modulate = Color(1.15, 1.1, 0.65, 1.0)
-		else:
-			button.modulate = Color.WHITE
+		button.modulate = Color.WHITE
+		_style_piece_button(button, not button.disabled and entry["text"] == _selected_piece)
 
 
 func _is_correct_for_slot(piece_text: String, slot_index: int) -> bool:
@@ -108,12 +235,9 @@ func _is_correct_for_slot(piece_text: String, slot_index: int) -> bool:
 
 
 func _update_slot_text(slot_index: int, piece_text: String) -> void:
-	if slot_index == 1:
-		slot_1.text = "Slot 1: %s" % piece_text
-	elif slot_index == 2:
-		slot_2.text = "Slot 2: %s" % piece_text
-	else:
-		slot_3.text = "Slot 3: %s" % piece_text
+	var slot: Button = [slot_1, slot_2, slot_3][slot_index - 1]
+	slot.text = "Slot %d: %s" % [slot_index, piece_text]
+	_style_slot_filled(slot)
 
 
 func _lock_piece(piece_text: String) -> void:

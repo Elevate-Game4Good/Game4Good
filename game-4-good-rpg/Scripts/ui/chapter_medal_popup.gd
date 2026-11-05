@@ -13,6 +13,7 @@ const BTN_PRESSED := Color(0.212, 0.271, 0.173)
 const BTN_BORDER := Color(0.8, 0.8, 0.8)
 
 var _advanced := false
+var medal_number: int = 1
 
 @onready var medal_draw: Control = $Root/Panel/Margin/MainVBox/MedalHost/MedalDraw
 @onready var title_label: Label = $Root/Panel/Margin/MainVBox/TitleLabel
@@ -27,19 +28,25 @@ func _ready() -> void:
 	layer = 150
 	QuestState.push_interaction_input_lock()
 	_apply_menu_style()
-	_advanced = QuestState.is_chapter1_medal_advanced()
+
+	var info: Dictionary = QuestState.PATH_MEDAL_INFO[clampi(medal_number - 1, 0, 2)]
+	title_label.text = info["name"]
+	desc_label.text = info["desc"]
+	gallery_label.text = "Path of Humanity medals: %d / 3" % QuestState.get_path_medal_count()
+
+	# The Chapter 1 fragment badge only belongs to medal 1
+	var show_fragments := medal_number == 1
+	$Root/Panel/Margin/MainVBox/FragmentBadge.visible = show_fragments
+	fragment_hint_label.visible = show_fragments
+	_advanced = show_fragments and QuestState.is_chapter1_medal_advanced()
 	medal_draw.set("advanced", _advanced)
 	medal_draw.queue_redraw()
-	title_label.text = "Valley Water Guardian"
-	desc_label.text = "You helped the villagers of Qingxi Valley solve water-related difficulties and learned the importance of cherishing water resources."
-	gallery_label.text = "Saved to the Path-of-Humanity Medal Hall"
-	if _advanced:
-		gallery_label.text += "  [Fully Explored]"
-	var frag_count := QuestState.get_chapter1_fragment_count()
-	fragment_hint_label.text = "Medal fragments: %d / 3" % frag_count
-	_refresh_fragment_icons()
+	if show_fragments:
+		if _advanced:
+			gallery_label.text += "  [Fully Explored]"
+		fragment_hint_label.text = "Medal fragments: %d / 3" % QuestState.get_chapter1_fragment_count()
+		_refresh_fragment_icons()
 	close_button.pressed.connect(_on_close_pressed)
-
 
 func _exit_tree() -> void:
 	QuestState.pop_interaction_input_lock()

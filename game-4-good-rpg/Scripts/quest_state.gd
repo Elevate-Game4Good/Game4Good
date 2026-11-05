@@ -34,6 +34,52 @@ var fragment_sign: bool = false
 var fragment_minigame: bool = false
 var _pending_fragment_tip: String = ""
 
+# ---- Medal collections (shown in the inventory Medals tab) ----
+const PATH_MEDAL_INFO: Array[Dictionary] = [
+	{
+		"name": "Valley Water Guardian",
+		"place": "Clear Stream Valley",
+		"hint": "Finish the sprinkler mini-game",
+		"desc": "You helped the villagers of Qingxi Valley solve water-related difficulties and learned the importance of cherishing water resources.",
+	},
+	{
+		"name": "Ocean Guardian",
+		"place": "Seabreeze Village",
+		"hint": "Sort the rubbish on the beach",
+		"desc": "You collected and sorted the rubbish on the beach, protecting the sea and the animals that live in it.",
+	},
+	{
+		"name": "Path of Humanity",
+		"place": "Journey complete",
+		"hint": "Finish the whole journey",
+		"desc": "You observed, listened and helped all along the way. You have walked the Path of Humanity!",
+	},
+]
+
+const EASTER_EGG_MEDALS: Array[Dictionary] = [
+	{"key": "fragment_stone", "name": "Canal Stone", "hint": "Look closely at the stones by the canal"},
+	{"key": "fragment_sign", "name": "Wooden Sign", "hint": "Check the wooden sign after the canal is cleaned"},
+	{"key": "fragment_minigame", "name": "Water Sorter", "hint": "Try the mini-game at the canal entrance"},
+]
+
+var path_medals: Array[bool] = [false, false, false]
+
+func award_path_medal(number: int) -> void:
+	var i := number - 1
+	if i >= 0 and i < path_medals.size():
+		path_medals[i] = true
+
+func has_path_medal(number: int) -> bool:
+	var i := number - 1
+	return i >= 0 and i < path_medals.size() and path_medals[i]
+
+func get_path_medal_count() -> int:
+	var total := 0
+	for earned in path_medals:
+		if earned:
+			total += 1
+	return total
+
 var chapter2_quest1_matt_done: bool = false
 var chapter2_quest1_kai_done: bool = false
 var chapter2_quest1_jessica_done: bool = false
@@ -451,6 +497,7 @@ func _maybe_show_chapter1_medal() -> void:
 	if tree.current_scene.scene_file_path != CHAPTER_1_SCENE:
 		return
 	chapter1_medal_shown = true
+	award_path_medal(1)
 	var medal_scene := preload("res://Scenes/ui/ChapterMedalPopup.tscn")
 	var popup: CanvasLayer = medal_scene.instantiate()
 	tree.current_scene.add_child(popup)
@@ -670,6 +717,7 @@ func _update_chapter3_quest2_completion() -> void:
 		
 func to_dict() -> Dictionary:
 	return {
+		"path_medals": path_medals.duplicate(),
 		"chapter_0": {
 			"traveler_done": chapter0_traveler_done,
 			"family_done": chapter0_family_done,
@@ -1156,3 +1204,13 @@ func load_from_dict(data: Dictionary) -> void:
 			false
 		)
 	)
+	
+	var saved_medals: Variant = data.get("path_medals", [])
+	for i in path_medals.size():
+		path_medals[i] = saved_medals is Array and i < saved_medals.size() and bool(saved_medals[i])
+	if chapter1_medal_shown:
+		path_medals[0] = true
+	if chapter2_beach_cleanup_done:
+		path_medals[1] = true
+	if chapter2_summary_shown:
+		path_medals[2] = true

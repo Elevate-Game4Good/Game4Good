@@ -1,5 +1,6 @@
 extends Node2D
 
+const MEDAL_POPUP_SCENE := preload("res://Scenes/ui/ChapterMedalPopup.tscn")
 const TRASH_ITEM_SCENE := preload("res://Scenes/chapter2/TrashItem.tscn")
 const SORTING_UI_SCENE := preload("res://Scenes/ui/GarbageSortingUI.tscn")
 const DIALOGUE := preload("res://dialogue.dialogue")
@@ -75,8 +76,16 @@ func _on_all_sorted() -> void:
 	if QuestState.chapter2_beach_cleanup_done or _completion_pending:
 		return
 	_completion_pending = true
+	_sorting_ui = null
+
+	# Path of Humanity medal 2, right after the sorting mini-game
+	QuestState.award_path_medal(2)
+	var popup: CanvasLayer = MEDAL_POPUP_SCENE.instantiate()
+	popup.medal_number = 2
+	get_tree().current_scene.add_child(popup)
+	await popup.closed
+
 	QuestState.mark_chapter2_beach_cleanup_done()
 	_hide_all_trash()
 	DialogueManager.show_example_dialogue_balloon(DIALOGUE, BeachCleanupConfig.COMPLETION_DIALOGUE_TITLE)
-	_sorting_ui = null
 	_completion_pending = false

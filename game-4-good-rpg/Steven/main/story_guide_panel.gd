@@ -367,7 +367,7 @@ var _ch2_snap_quest2_done: bool = false
 var _ch2_snap_quest3_done: bool = false
 var _ch2_snap_quest4_done: bool = false
 var _ch2_snap_quest5_done: bool = false
-
+var _final_medal_flow := false
 var current_index: int = 0
 var active_entries: Array = []
 var is_guide_open: bool = false
@@ -669,6 +669,12 @@ func _on_next_button_pressed() -> void:
 
 
 func _on_alt_button_pressed() -> void:
+	if panel_mode == PanelMode.CHAPTER_FINAL_SUMMARY and final_summary_chapter_id == 2:
+		_mark_chapter_summary_shown(2)
+		get_tree().paused = false
+		get_tree().quit()
+		return
+	
 	if panel_mode == PanelMode.QUEST_COMPLETION_CONFIRMATION:
 		var completed_idx := _completion_prompt_quest_index
 		if completed_idx < 0:
@@ -701,7 +707,14 @@ func _show_entry(index: int) -> void:
 		next_button.text = "Start Quest" if not _has_more_quest_guide_pages(index) else "Next"
 		return
 	if active_guide_kind == "chapter_educational":
-		next_button.text = "Finish all the journey" if index == active_entries.size() - 1 else "Next"
+		var is_last_page := index == active_entries.size() - 1
+		if is_last_page and final_summary_chapter_id == 2:
+			next_button.text = "Main Menu"
+			# Quitting does nothing useful in a browser, so only show Exit on desktop builds
+			alt_button.text = "Exit Game"
+			alt_button.visible = not OS.has_feature("web")
+		else:
+			next_button.text = "Finish all the journey" if is_last_page else "Next"
 		return
 	if active_guide_kind == "chapter_context":
 		next_button.text = "Start Chapter"
@@ -1457,19 +1470,38 @@ func _should_show_chapter1_castle_gate() -> bool:
 func _is_chapter1_castle_puzzle_complete() -> bool:
 	return QuestState.is_chapter1_castle_puzzle_complete()
 
+func _start_final_medal_flow() -> void:
+	if _final_medal_flow:
+		return  # _process calls this every frame while the popup/inventory are open
+	_final_medal_flow = true
+	QuestState.award_path_medal(3)
+	var popup: CanvasLayer = (load(MEDAL_POPUP_SCENE) as PackedScene).instantiate()
+	popup.medal_number = 3
+	get_tree().current_scene.add_child(popup)
+	await popup.closed
+	Inventory.open_inventory("medals")
+	await Inventory.closed
+	_final_medal_flow = false
+	_open_chapter_final_summary(2)
 
 func _open_chapter_final_summary(chapter_id: int) -> void:
 	if chapter_id == 1 and _should_show_chapter1_castle_gate():
 		_open_chapter1_castle_gate()
 		return
+	
+	if chapter_id == 2 and (_final_medal_flow or not QuestState.has_path_medal(3)):
+		_start_final_medal_flow()
+		return
 
-	panel_mode = PanelMode.CHAPTER_FINAL_SUMMARY
 	final_summary_chapter_id = chapter_id
 	var educational_entries: Array = CHAPTER_EDUCATIONAL_ENTRIES.get(chapter_id, [])
 	if not educational_entries.is_empty():
 		_open_guide(educational_entries, "chapter_educational")
+		# _open_guide() resets panel_mode to GUIDE, so set it AFTER
+		panel_mode = PanelMode.CHAPTER_FINAL_SUMMARY
 		return
 
+	panel_mode = PanelMode.CHAPTER_FINAL_SUMMARY
 	active_entries.clear()
 	story_guide_layer.visible = true
 	is_guide_open = true

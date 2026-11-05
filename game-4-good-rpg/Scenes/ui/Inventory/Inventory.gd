@@ -1,88 +1,109 @@
 extends CanvasLayer
-## Inventory (autoload). Open with I / Tab, close with I / Tab / Esc.
-## Tabs: "Items", "Quest Items", and "Medals".
+## Inventory with three tabs: Items | Quest Items | Medals.
+## The player scripts open/close it with Inventory.toggle_inventory().
+## Other scripts can call Inventory.open_inventory("medals") and then `await Inventory.closed`.
 
-# ---- Look (matches the story guide panels) ----
-const PANEL_BG := Color(0.051, 0.059, 0.078, 0.94)
+signal closed
+
+const MENU_FONT := preload("res://Sprites/Font/VCR_OSD_MONO_1.001.ttf")
+
+const PANEL_BG := Color(0.051, 0.059, 0.078, 0.92)
 const BORDER := Color(0.8, 0.8, 0.8)
 const GREEN := Color(0.529, 0.639, 0.463)
 const GREEN_HOVER := Color(0.396, 0.494, 0.337)
 const GREEN_DARK := Color(0.212, 0.271, 0.173)
-const SLATE := Color(0.16, 0.18, 0.22)
-const SLATE_HOVER := Color(0.25, 0.28, 0.33)
-const INNER_BG := Color(0.09, 0.105, 0.13, 0.9)
-const YELLOW := Color(1.0, 0.85, 0.45)
+const CARD_BG := Color(0.09, 0.105, 0.13, 1.0)
+const DARK_TEXT := Color(0.05, 0.06, 0.08)
+const MUTED := Color(1, 1, 1, 0.6)
+const GOLD := Color(0.93, 0.78, 0.35)
+const GOLD_RIM := Color(0.72, 0.52, 0.12)
 
-const SLOT_SIZE := Vector2(108, 108)
-const ICON_SIZE := Vector2(56, 56)
-const GRID_COLUMNS := 5
+const TAB_ITEMS := "items"
+const TAB_QUEST := "quest_items"
+const TAB_MEDALS := "medals"
 
-enum Tab { ITEMS, QUEST_ITEMS, MEDALS }
-
-## Fun facts, keyed by the trash item_id from BeachCleanupConfig.
-const FUN_FACTS: Dictionary = {
-	"plastic_bottle": {
-		"title": "Plastic Bottle",
-		"text": "A single plastic bottle can take up to 450 years to decompose in a landfill, but recycling just one saves enough energy to power a 60-watt light bulb for up to six hours.",
-	},
-	"plastic_bag": {
-		"title": "Plastic Bags",
-		"text": "Most plastic bags are used for an average of only 12 minutes, yet they can linger in the environment for up to 500 years because they break down into microplastics rather than fully biodegrading.",
-	},
-	"glass_bottle": {
-		"title": "Glass Bottle",
-		"text": "Glass is 100% recyclable and can be melted down and reused infinitely without ever losing its quality or purity.",
-	},
-	"metal_can": {
-		"title": "Metal Cans",
-		"text": "Aluminum cans are the ultimate recycling champions. A recycled aluminum can can be melted down, turned into a brand-new can, and placed back on a supermarket shelf in as little as 60 days.",
-	},
-	"broken_fishing_net": {
-		"title": "Broken Fishing Net (Sea Waste)",
-		"text": "Abandoned fishing gear, often called \"ghost nets,\" makes up about 10% of all marine litter and continues to catch and trap marine life for decades after being lost.",
-	},
-	"shell_food_waste": {
-		"title": "Shell / Food Waste",
-		"text": "When food waste breaks down in oxygen-starved landfills, it creates methane (a greenhouse gas), but shell waste, like oyster shells, can actually be repurposed to rebuild coastal reefs and restore ocean ecosystems.",
-	},
+## Fun facts shown when a quest item is clicked. Key = item_id from BeachCleanupConfig.
+const FUN_FACTS := {
+	"plastic_bottle": "A single plastic bottle can take up to 450 years to decompose in a landfill, but recycling just one saves enough energy to power a 60-watt light bulb for up to six hours.",
+	"plastic_bag": "Most plastic bags are used for an average of only 12 minutes, yet they can linger in the environment for up to 500 years because they break down into microplastics rather than fully biodegrading.",
+	"glass_bottle": "Glass is 100% recyclable and can be melted down and reused infinitely without ever losing its quality or purity.",
+	"metal_can": "Aluminum cans are the ultimate recycling champions: a recycled aluminum can can be melted down, turned into a brand-new can, and placed back on a supermarket shelf in as little as 60 days.",
+	"broken_fishing_net": "Abandoned fishing gear, often called \"ghost nets\", makes up about 10% of all marine litter and continues to catch and trap marine life for decades after being lost.",
+	"shell_food_waste": "When food waste breaks down in oxygen-starved landfills, it creates methane (a greenhouse gas), but shell waste, like oyster shells, can actually be repurposed to rebuild coastal reefs and restore ocean ecosystems.",
 }
 
-const FACT_HINT_TITLE := "Information"
-const FACT_HINT_TEXT := "Click an entry to view details."
+var _current_tab := TAB_ITEMS
+var _medal_view := ""  # "" = collections overview, "path" or "easter" = one collection
+var _selected_item := ""
+var _input_locked := false
 
-var _tab: int = Tab.ITEMS
-var _tab_chosen := false
-var _lock_held := false
-var _selected_key := ""
-
-var _items_tab_button: Button
-var _quest_tab_button: Button
-var _medals_tab_button: Button
-var _count_label: Label
-var _grid: GridContainer
-var _empty_label: Label
+var _tab_buttons: Dictionary = {}
+var _item_cards: Dictionary = {}
+var _content: VBoxContainer
+var _fact_panel: PanelContainer
 var _fact_title: Label
 var _fact_text: Label
 
-## key -> PanelContainer (slot), key -> entry Dictionary for the tab on screen
-var _slots: Dictionary = {}
-var _entries: Dictionary = {}
+
+## Round medal drawn in code: gold/green when earned, dark "?" when locked.
+class MedalIcon extends Control:
+	var earned := false
+	var fill := Color(0.93, 0.78, 0.35)
+	var rim := Color(0.72, 0.52, 0.12)
+	var glyph := ""  # "" draws a diamond
+
+	func _init(p_earned: bool, p_fill: Color, p_rim: Color, p_glyph: String, p_size: float) -> void:
+		earned = p_earned
+		fill = p_fill
+		rim = p_rim
+		glyph = p_glyph
+		custom_minimum_size = Vector2(p_size, p_size)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+	func _draw() -> void:
+		var c := size / 2.0
+		var r := minf(size.x, size.y) / 2.0 - 4.0
+		if r <= 0.0:
+			return
+		var ink := Color(0.25, 0.17, 0.05)
+		if earned:
+			draw_circle(c, r, fill)
+			draw_arc(c, r, 0.0, TAU, 64, rim, 5.0, true)
+			draw_arc(c, r * 0.72, 0.0, TAU, 64, rim, 2.0, true)
+		else:
+			ink = Color(0.5, 0.52, 0.57)
+			draw_circle(c, r, Color(0.16, 0.18, 0.22))
+			draw_arc(c, r, 0.0, TAU, 64, Color(0.35, 0.38, 0.43), 4.0, true)
+		if not earned:
+			_draw_text("?", c, r, ink)
+		elif glyph == "":
+			var d := r * 0.38
+			draw_colored_polygon(PackedVector2Array([
+				c + Vector2(0, -d * 1.3),
+				c + Vector2(d, 0),
+				c + Vector2(0, d * 1.3),
+				c + Vector2(-d, 0),
+			]), ink)
+		else:
+			_draw_text(glyph, c, r, ink)
+
+	func _draw_text(text: String, c: Vector2, r: float, color: Color) -> void:
+		var font := ThemeDB.fallback_font
+		var fs := int(r * 0.95)
+		var ts := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+		var baseline := c.y + (font.get_ascent(fs) - font.get_descent(fs)) / 2.0
+		draw_string(font, Vector2(c.x - ts.x / 2.0, baseline), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, color)
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	layer = 95
+	layer = 120
 	visible = false
-	for child in get_children():
-		remove_child(child)
-		child.queue_free()
 	_build_ui()
-	if InventoryManager.has_signal("inventory_changed"):
-		InventoryManager.inventory_changed.connect(_on_inventory_changed)
-	update_inventory()
 
 
-# ============================================================================ open / close
+# ---------- public API ----------
 
 func toggle_inventory() -> void:
 	if visible:
@@ -91,423 +112,469 @@ func toggle_inventory() -> void:
 		open_inventory()
 
 
-func open_inventory() -> void:
-	if not _tab_chosen:
-		if InventoryManager.get_items().is_empty() and not _quest_entries().is_empty():
-			_tab = Tab.QUEST_ITEMS
-	update_inventory()
+## tab: "items", "quest_items" or "medals" (empty = keep the last tab)
+func open_inventory(tab: String = "") -> void:
+	if tab != "":
+		_current_tab = tab
+		_medal_view = ""
 	visible = true
-	_set_lock(true)
+	_set_input_locked(true)
+	_refresh()
 
 
 func close_inventory() -> void:
-	visible = false
-	_set_lock(false)
-
-
-func _set_lock(held: bool) -> void:
-	if held == _lock_held:
+	if not visible:
 		return
-	_lock_held = held
-	if held:
+	visible = false
+	_set_input_locked(false)
+	closed.emit()
+
+
+func update_inventory() -> void:
+	if visible:
+		_refresh()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed(&"ui_cancel"):
+		close_inventory()
+		get_viewport().set_input_as_handled()
+
+
+func _set_input_locked(locked: bool) -> void:
+	if locked == _input_locked:
+		return
+	_input_locked = locked
+	if locked:
 		QuestState.push_interaction_input_lock()
 	else:
 		QuestState.pop_interaction_input_lock()
 
 
-func _input(event: InputEvent) -> void:
-	if not visible:
+# ---------- UI construction ----------
+
+func _build_ui() -> void:
+	# The old scene tree is replaced by this one
+	var old := get_node_or_null("Control")
+	if old != null:
+		old.queue_free()
+
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(root)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(820, 580)
+	panel.add_theme_stylebox_override("panel", _box(PANEL_BG, 20, 4, Color.WHITE))
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 20)
+	panel.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	# Header
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 12)
+	vbox.add_child(header)
+	var title := _make_label("Inventory", 32)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var hint := _make_label("I / Esc to close", 14, MUTED)
+	hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(hint)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	_style_button(close_btn, 18, Vector2(44, 40))
+	close_btn.pressed.connect(close_inventory)
+	header.add_child(close_btn)
+
+	# Tabs
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 10)
+	vbox.add_child(tabs)
+	for entry in [[TAB_ITEMS, "Items"], [TAB_QUEST, "Quest Items"], [TAB_MEDALS, "Medals"]]:
+		var btn := Button.new()
+		btn.text = entry[1]
+		btn.pressed.connect(_on_tab_pressed.bind(entry[0]))
+		tabs.add_child(btn)
+		_tab_buttons[entry[0]] = btn
+
+	# Scrollable content area
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+	_content = VBoxContainer.new()
+	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_theme_constant_override("separation", 12)
+	scroll.add_child(_content)
+
+	# Fun-fact panel (only shown on the Quest Items tab)
+	_fact_panel = PanelContainer.new()
+	_fact_panel.custom_minimum_size = Vector2(0, 112)
+	_fact_panel.add_theme_stylebox_override("panel", _box(CARD_BG, 12, 3, GREEN))
+	vbox.add_child(_fact_panel)
+	var fact_margin := MarginContainer.new()
+	fact_margin.add_theme_constant_override("margin_left", 8)
+	fact_margin.add_theme_constant_override("margin_right", 8)
+	_fact_panel.add_child(fact_margin)
+	var fact_box := VBoxContainer.new()
+	fact_box.add_theme_constant_override("separation", 4)
+	fact_margin.add_child(fact_box)
+	_fact_title = _make_label("Fun fact", 18, GREEN)
+	fact_box.add_child(_fact_title)
+	_fact_text = _make_label("", 16)
+	_fact_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	fact_box.add_child(_fact_text)
+
+
+func _refresh() -> void:
+	for id in _tab_buttons:
+		_style_tab(_tab_buttons[id], id == _current_tab)
+	for child in _content.get_children():
+		_content.remove_child(child)
+		child.queue_free()
+	_item_cards.clear()
+	_fact_panel.visible = _current_tab == TAB_QUEST
+	match _current_tab:
+		TAB_QUEST:
+			_build_quest_items()
+		TAB_MEDALS:
+			_build_medals()
+		_:
+			_build_items()
+
+
+func _on_tab_pressed(tab: String) -> void:
+	_current_tab = tab
+	_medal_view = ""
+	_refresh()
+
+
+# ---------- Items tab ----------
+
+func _build_items() -> void:
+	var items: Array = InventoryManager.get_items()
+	if items.is_empty():
+		_content.add_child(_make_label("Nothing here yet.", 18, MUTED))
 		return
-	var key_event := event as InputEventKey
-	if key_event == null or not key_event.pressed or key_event.echo:
+	for item_name in items:
+		_content.add_child(_make_label("- " + str(item_name), 20))
+
+
+# ---------- Quest Items tab ----------
+
+func _build_quest_items() -> void:
+	var items: Array[Dictionary] = QuestState.get_beach_trash_collected_items()
+	if items.is_empty():
+		_content.add_child(_make_label("No quest items yet.\nItems you collect on quests are kept here.", 18, MUTED))
+		_update_fact()
 		return
-	var key := key_event.physical_keycode
-	if key == KEY_I or key == KEY_TAB or key == KEY_ESCAPE:
-		get_viewport().set_input_as_handled()
-		close_inventory()
+	_content.add_child(_make_label("Tap an item to learn a fun fact!", 16, MUTED))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 14)
+	_content.add_child(grid)
+	for item in items:
+		var item_id := str(item.get("item_id", ""))
+		var card := _make_item_card(item_id, str(item.get("display_name", item_id)))
+		grid.add_child(card)
+		_item_cards[item_id] = card
+	_update_fact()
 
 
-func _on_inventory_changed() -> void:
-	if visible:
-		update_inventory()
+func _make_item_card(item_id: String, display_name: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(230, 128)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	card.add_theme_stylebox_override("panel", _item_card_box(item_id == _selected_item, false))
+	card.gui_input.connect(_on_item_card_input.bind(item_id))
+	card.mouse_entered.connect(_restyle_item_card.bind(item_id, true))
+	card.mouse_exited.connect(_restyle_item_card.bind(item_id, false))
+
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(box)
+
+	var tex := TextureRect.new()
+	tex.texture = BeachTrashAtlas.get_texture(item_id)
+	tex.custom_minimum_size = Vector2(56, 56)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(tex)
+
+	var name_label := _make_label(display_name, 18)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(name_label)
+	return card
 
 
-# ============================================================================ building the UI
-
-func _box(bg: Color, border: Color, border_width: int, radius: int) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = bg
-	box.border_color = border
-	box.set_border_width_all(border_width)
-	box.set_corner_radius_all(radius)
-	return box
+func _item_card_box(selected: bool, hovered: bool) -> StyleBoxFlat:
+	if selected:
+		return _box(Color(0.15, 0.2, 0.15), 14, 4, Color.WHITE)
+	if hovered:
+		return _box(CARD_BG.lightened(0.08), 14, 3, Color.WHITE)
+	return _box(CARD_BG, 14, 3, Color(0.45, 0.48, 0.52))
 
 
-func _label(text: String, font_size: int, color: Color = Color(0.95, 0.96, 0.97)) -> Label:
+func _restyle_item_card(item_id: String, hovered: bool) -> void:
+	if not _item_cards.has(item_id):
+		return
+	var card: PanelContainer = _item_cards[item_id]
+	card.add_theme_stylebox_override("panel", _item_card_box(item_id == _selected_item, hovered))
+
+
+func _on_item_card_input(event: InputEvent, item_id: String) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_selected_item = item_id
+		for id in _item_cards:
+			_restyle_item_card(id, id == item_id)
+		_update_fact()
+		_pop_fact()
+
+
+func _update_fact() -> void:
+	if _selected_item == "" or not _item_cards.has(_selected_item):
+		_fact_title.text = "Fun fact"
+		_fact_text.text = "Tap an item above to learn something about it."
+		return
+	var config := BeachCleanupConfig.get_item_by_id(_selected_item)
+	_fact_title.text = str(config.get("display_name", _selected_item))
+	_fact_text.text = str(FUN_FACTS.get(_selected_item, "No fun fact for this one yet!"))
+
+
+func _pop_fact() -> void:
+	_fact_panel.pivot_offset = _fact_panel.size / 2.0
+	_fact_panel.scale = Vector2(0.97, 0.9)
+	_fact_panel.modulate.a = 0.0
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(_fact_panel, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_fact_panel, "modulate:a", 1.0, 0.15)
+
+
+# ---------- Medals tab ----------
+
+func _build_medals() -> void:
+	match _medal_view:
+		"path":
+			_build_medal_detail("Path of Humanity", _path_entries(), GOLD, GOLD_RIM, "You collected every Path of Humanity medal!")
+		"easter":
+			_build_medal_detail("Easter Eggs", _easter_entries(), GREEN, GREEN_DARK, "You found every hidden easter egg. Great exploring!")
+		_:
+			_build_medal_overview()
+
+
+func _path_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in QuestState.PATH_MEDAL_INFO.size():
+		var info: Dictionary = QuestState.PATH_MEDAL_INFO[i]
+		out.append({
+			"name": info["name"],
+			"sub": info["place"],
+			"hint": info["hint"],
+			"earned": QuestState.has_path_medal(i + 1),
+			"glyph": str(i + 1),
+		})
+	return out
+
+
+func _easter_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for info in QuestState.EASTER_EGG_MEDALS:
+		out.append({
+			"name": info["name"],
+			"sub": "Clear Stream Valley",
+			"hint": info["hint"],
+			"earned": bool(QuestState.get(info["key"])),
+			"glyph": "",
+		})
+	return out
+
+
+func _count_earned(entries: Array[Dictionary]) -> int:
+	var total := 0
+	for entry in entries:
+		if entry["earned"]:
+			total += 1
+	return total
+
+
+func _build_medal_overview() -> void:
+	var hint := _make_label("Tap a collection to see its medals.", 16, MUTED)
+	_content.add_child(hint)
+	var center := CenterContainer.new()
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_child(center)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 28)
+	center.add_child(row)
+	row.add_child(_make_collection_card("Path of Humanity", _path_entries(), GOLD, GOLD_RIM, "path"))
+	row.add_child(_make_collection_card("Easter Eggs", _easter_entries(), GREEN, GREEN_DARK, "easter"))
+
+
+func _make_collection_card(title: String, entries: Array[Dictionary], fill: Color, rim: Color, view: String) -> PanelContainer:
+	var earned := _count_earned(entries)
+	var complete := earned == entries.size()
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(300, 270)
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var normal := _box(CARD_BG, 16, 3, fill if complete else BORDER)
+	var hover := _box(CARD_BG.lightened(0.08), 16, 3, Color.WHITE)
+	card.add_theme_stylebox_override("panel", normal)
+	card.mouse_entered.connect(func() -> void: card.add_theme_stylebox_override("panel", hover))
+	card.mouse_exited.connect(func() -> void: card.add_theme_stylebox_override("panel", normal))
+	card.gui_input.connect(_on_collection_input.bind(view))
+
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 10)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(box)
+	box.add_child(MedalIcon.new(earned > 0, fill, rim, "", 120))
+	var title_label := _make_label(title, 22)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title_label)
+	var count_label := _make_label("%d / %d" % [earned, entries.size()], 20, fill)
+	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(count_label)
+	return card
+
+
+func _on_collection_input(event: InputEvent, view: String) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_medal_view = view
+		_refresh()
+
+
+func _build_medal_detail(title: String, entries: Array[Dictionary], fill: Color, rim: Color, complete_text: String) -> void:
+	var earned := _count_earned(entries)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 12)
+	_content.add_child(top)
+	var back := Button.new()
+	back.text = "< Back"
+	_style_button(back, 18, Vector2(120, 40))
+	back.pressed.connect(_on_medal_back)
+	top.add_child(back)
+	var heading := _make_label("%s   %d / %d" % [title, earned, entries.size()], 24)
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top.add_child(heading)
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(120, 0)
+	top.add_child(spacer)
+
+	var center := CenterContainer.new()
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_child(center)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	center.add_child(row)
+	for entry in entries:
+		row.add_child(_make_medal_slot(entry, fill, rim))
+
+	if earned == entries.size():
+		var done := _make_label(complete_text, 16, fill)
+		done.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_content.add_child(done)
+
+
+func _make_medal_slot(entry: Dictionary, fill: Color, rim: Color) -> VBoxContainer:
+	var earned: bool = entry["earned"]
+	var slot := VBoxContainer.new()
+	slot.custom_minimum_size = Vector2(190, 0)
+	slot.add_theme_constant_override("separation", 8)
+	slot.add_child(MedalIcon.new(earned, fill, rim, str(entry.get("glyph", "")), 110))
+
+	var name_label := _make_label(str(entry["name"]) if earned else "???", 18)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	slot.add_child(name_label)
+
+	var sub_label := _make_label(str(entry["sub"]) if earned else str(entry["hint"]), 14, MUTED)
+	sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	slot.add_child(sub_label)
+	return slot
+
+
+func _on_medal_back() -> void:
+	_medal_view = ""
+	_refresh()
+
+
+# ---------- style helpers ----------
+
+func _box(bg: Color, radius: int, border: int, border_color: Color) -> StyleBoxFlat:
+	var b := StyleBoxFlat.new()
+	b.bg_color = bg
+	b.set_corner_radius_all(radius)
+	b.set_border_width_all(border)
+	b.border_color = border_color
+	b.content_margin_left = 10
+	b.content_margin_right = 10
+	b.content_margin_top = 10
+	b.content_margin_bottom = 10
+	return b
+
+
+func _make_label(text: String, font_size: int, color: Color = Color.WHITE) -> Label:
 	var label := Label.new()
 	label.text = text
+	label.add_theme_font_override("font", MENU_FONT)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	return label
 
 
-func _style_button(button: Button, normal: Color, hover: Color, pressed: Color, border: Color) -> void:
-	for state in ["normal", "hover", "pressed"]:
-		var bg: Color = normal
-		var edge: Color = border
-		if state == "hover":
-			bg = hover
-			edge = Color.WHITE
-		elif state == "pressed":
-			bg = pressed
-		var box := _box(bg, edge, 3, 10)
-		box.content_margin_left = 14.0
-		box.content_margin_right = 14.0
-		box.content_margin_top = 8.0
-		box.content_margin_bottom = 8.0
-		button.add_theme_stylebox_override(state, box)
-	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	button.add_theme_font_size_override("font_size", 16)
-	button.add_theme_color_override("font_color", Color.WHITE)
-	button.add_theme_color_override("font_hover_color", Color.WHITE)
-	button.add_theme_color_override("font_pressed_color", Color.WHITE)
+func _style_button(btn: Button, font_size: int, min_size: Vector2) -> void:
+	btn.custom_minimum_size = min_size
+	btn.add_theme_font_override("font", MENU_FONT)
+	btn.add_theme_font_size_override("font_size", font_size)
+	btn.add_theme_color_override("font_color", DARK_TEXT)
+	btn.add_theme_color_override("font_hover_color", DARK_TEXT)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_stylebox_override("normal", _box(GREEN, 10, 3, BORDER))
+	btn.add_theme_stylebox_override("hover", _box(GREEN_HOVER, 10, 3, BORDER))
+	btn.add_theme_stylebox_override("pressed", _box(GREEN_DARK, 10, 3, BORDER))
+	btn.add_theme_stylebox_override("focus", _box(Color(0, 0, 0, 0), 10, 3, Color.WHITE))
 
 
-func _build_ui() -> void:
-	var root := Control.new()
-	add_child(root)
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var dimmer := ColorRect.new()
-	dimmer.color = Color(0, 0, 0, 0.5)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
-	root.add_child(dimmer)
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var center := CenterContainer.new()
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 640)
-	panel.add_theme_stylebox_override("panel", _box(PANEL_BG, BORDER, 4, 20))
-	center.add_child(panel)
-
-	var margin := MarginContainer.new()
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 24)
-	panel.add_child(margin)
-
-	var main := VBoxContainer.new()
-	main.add_theme_constant_override("separation", 10)
-	margin.add_child(main)
-
-	# --- header ---
-	var header := HBoxContainer.new()
-	main.add_child(header)
-	var title_box := VBoxContainer.new()
-	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_theme_constant_override("separation", 0)
-	header.add_child(title_box)
-	title_box.add_child(_label("Your bag", 18, GREEN))
-	title_box.add_child(_label("Inventory", 32))
-	_count_label = _label("0 items", 18, Color(0.85, 0.87, 0.9))
-	_count_label.size_flags_vertical = Control.SIZE_SHRINK_END
-	header.add_child(_count_label)
-
-	# --- tabs ---
-	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 8)
-	main.add_child(tabs)
-	
-	_items_tab_button = Button.new()
-	_items_tab_button.focus_mode = Control.FOCUS_NONE
-	_items_tab_button.pressed.connect(_set_tab.bind(Tab.ITEMS))
-	tabs.add_child(_items_tab_button)
-
-	_quest_tab_button = Button.new()
-	_quest_tab_button.focus_mode = Control.FOCUS_NONE
-	_quest_tab_button.pressed.connect(_set_tab.bind(Tab.QUEST_ITEMS))
-	tabs.add_child(_quest_tab_button)
-
-	_medals_tab_button = Button.new()
-	_medals_tab_button.focus_mode = Control.FOCUS_NONE
-	_medals_tab_button.pressed.connect(_set_tab.bind(Tab.MEDALS))
-	tabs.add_child(_medals_tab_button)
-
-	# --- item grid ---
-	var grid_panel := PanelContainer.new()
-	grid_panel.custom_minimum_size = Vector2(0, 230)
-	grid_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var grid_box := _box(INNER_BG, Color(0.45, 0.48, 0.52), 2, 12)
-	grid_box.set_content_margin_all(12.0)
-	grid_panel.add_theme_stylebox_override("panel", grid_box)
-	main.add_child(grid_panel)
-
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	grid_panel.add_child(scroll)
-
-	_grid = GridContainer.new()
-	_grid.columns = GRID_COLUMNS
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid.add_theme_constant_override("h_separation", 12)
-	_grid.add_theme_constant_override("v_separation", 12)
-	scroll.add_child(_grid)
-
-	_empty_label = _label("", 18, Color(0.85, 0.87, 0.9))
-	_empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_empty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_empty_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	grid_panel.add_child(_empty_label)
-
-	# --- description / fun fact panel (bottom) ---
-	var fact_panel := PanelContainer.new()
-	fact_panel.custom_minimum_size = Vector2(0, 150)
-	var fact_box := _box(INNER_BG, GREEN, 2, 12)
-	fact_box.set_content_margin_all(14.0)
-	fact_panel.add_theme_stylebox_override("panel", fact_box)
-	main.add_child(fact_panel)
-
-	var fact_vbox := VBoxContainer.new()
-	fact_vbox.add_theme_constant_override("separation", 6)
-	fact_panel.add_child(fact_vbox)
-	_fact_title = _label(FACT_HINT_TITLE, 20, GREEN)
-	fact_vbox.add_child(_fact_title)
-	_fact_text = _label(FACT_HINT_TEXT, 18)
-	_fact_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_fact_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fact_vbox.add_child(_fact_text)
-
-	# --- footer ---
-	var hint := _label("Press I, Tab or Esc to close", 16, Color(0.85, 0.87, 0.9, 0.7))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	main.add_child(hint)
-
-
-# ============================================================================ data providers
-
-func _item_entries() -> Array[Dictionary]:
-	var list: Array[Dictionary] = []
-	for item_name in InventoryManager.get_items():
-		list.append({
-			"key": "item:" + item_name,
-			"name": item_name,
-			"texture": null,
-			"title": item_name,
-			"text": "Nothing special to note about this one yet.",
-		})
-	return list
-
-
-func _quest_entries() -> Array[Dictionary]:
-	var list: Array[Dictionary] = []
-	for trash in QuestState.get_beach_trash_collected_items():
-		var item_id: String = trash.get("item_id", "")
-		var fact: Dictionary = FUN_FACTS.get(item_id, {})
-		list.append({
-			"key": "quest:" + item_id,
-			"name": trash.get("display_name", "Trash"),
-			"texture": BeachTrashAtlas.get_texture(item_id),
-			"title": fact.get("title", trash.get("display_name", "Trash")),
-			"text": fact.get("text", "No fun fact for this item yet."),
-		})
-	return list
-
-
-## Separate total medals for the "Medals" tab, updated dynamically as the player progresses.
-func _medal_entries() -> Array[Dictionary]:
-	var list: Array[Dictionary] = []
-
-	# 1. Chapter 1 Easter Egg / Fragment Medal Progress
-	var frag_count := QuestState.get_chapter1_fragment_count()
-	var ch1_complete := QuestState.is_chapter1_medal_advanced()
-	list.append({
-		"key": "medal:chapter1_easter_egg",
-		"name": "Valley Guardian",
-		"texture": null,
-		"title": "Valley Water Guardian (Chapter 1 Medal)",
-		"text": "Easter egg fragments collected: %d / 3. Status: %s" % [
-			frag_count, 
-			"Fully Explored & Unlocked!" if ch1_complete else "In Progress"
-		],
-	})
-
-	# 2. Sprinkler Challenge & Chapter 2 Garbage Sorting Medal progression
-	var sprinkler_done: bool = QuestState.chapter1_sprinkler_minigame_completed
-	var garbage_done: bool = QuestState.chapter2_beach_cleanup_done
-	var ch2_mid_status = "Not Started"
-	if garbage_done:
-		ch2_mid_status = "Part 2 Complete (Garbage Sorting Finished)"
-	elif sprinkler_done:
-		ch2_mid_status = "Part 1 Complete (Sprinkler Challenge Finished)"
-		
-	list.append({
-		"key": "medal:chapter2_progression",
-		"name": "Eco Innovator",
-		"texture": null,
-		"title": "Sprinkler & Garbage Sorting Progress Medal",
-		"text": "Current Progression: %s." % ch2_mid_status,
-	})
-
-	# 3. Chapter 2 Final Chapter Completion Medal
-	var ch2_end_complete: bool = QuestState.is_chapter2_complete()
-	list.append({
-		"key": "medal:chapter2_end",
-		"name": "Master Conservator",
-		"texture": null,
-		"title": "Chapter 2 Final Completion Medal",
-		"text": "Status: %s. Awarded right before completing Chapter 2." % (
-			"Unlocked" if ch2_end_complete else "Locked (Complete Chapter 2 to unlock)"
-		),
-	})
-
-	return list
-
-
-# ============================================================================ refreshing
-
-func _set_tab(tab: int) -> void:
-	_tab = tab
-	_tab_chosen = true
-	_selected_key = ""
-	update_inventory()
-
-
-func update_inventory() -> void:
-	for child in _grid.get_children():
-		_grid.remove_child(child)
-		child.queue_free()
-	_slots.clear()
-	_entries.clear()
-
-	var entries: Array[Dictionary] = []
-	if _tab == Tab.QUEST_ITEMS:
-		entries = _quest_entries()
-	elif _tab == Tab.MEDALS:
-		entries = _medal_entries()
-	else:
-		entries = _item_entries()
-
-	for entry in entries:
-		var slot := _make_slot(entry)
-		_grid.add_child(slot)
-		_slots[entry["key"]] = slot
-		_entries[entry["key"]] = entry
-
-	var count := entries.size()
-	_count_label.text = "%d item%s" % [count, "" if count == 1 else "s"]
-	_empty_label.visible = count == 0
-	
-	if _tab == Tab.QUEST_ITEMS:
-		_empty_label.text = "No quest items yet.\nItems you collect for quests will be kept here."
-	elif _tab == Tab.MEDALS:
-		_empty_label.text = "No medals earned yet.\nComplete chapters and challenges to earn medals."
-	else:
-		_empty_label.text = "Your bag is empty.\nThings you pick up will appear here."
-
-	var item_count := InventoryManager.get_items().size()
-	var quest_count := QuestState.get_beach_trash_collected_count()
-	# Count unlocked/total medals for display badge
-	var medal_count := _medal_entries().size()
-	
-	_items_tab_button.text = "Items (%d)" % item_count
-	_quest_tab_button.text = "Quest Items (%d)" % quest_count
-	_medals_tab_button.text = "Medals (%d)" % medal_count
-	
-	_apply_tab_style(_items_tab_button, _tab == Tab.ITEMS)
-	_apply_tab_style(_quest_tab_button, _tab == Tab.QUEST_ITEMS)
-	_apply_tab_style(_medals_tab_button, _tab == Tab.MEDALS)
-
-	if not _entries.has(_selected_key):
-		_selected_key = ""
-	_refresh_selection()
-
-
-func _apply_tab_style(button: Button, active: bool) -> void:
-	if active:
-		_style_button(button, GREEN, GREEN_HOVER, GREEN_DARK, BORDER)
-	else:
-		_style_button(button, SLATE, SLATE_HOVER, SLATE, Color(0.7, 0.7, 0.7))
-
-
-func _slot_box(selected: bool) -> StyleBoxFlat:
-	if selected:
-		return _box(Color(0.2, 0.2, 0.12), YELLOW, 3, 10)
-	return _box(Color(0.13, 0.15, 0.18), Color(0.72, 0.76, 0.8), 2, 10)
-
-
-func _refresh_selection() -> void:
-	for key in _slots:
-		var slot: PanelContainer = _slots[key]
-		slot.add_theme_stylebox_override("panel", _slot_box(key == _selected_key))
-	if _selected_key.is_empty():
-		_fact_title.text = FACT_HINT_TITLE
-		_fact_text.text = FACT_HINT_TEXT
-	else:
-		var entry: Dictionary = _entries[_selected_key]
-		_fact_title.text = entry["title"]
-		_fact_text.text = entry["text"]
-
-
-func _on_slot_pressed(key: String) -> void:
-	_selected_key = "" if _selected_key == key else key
-	_refresh_selection()
-
-
-func _make_slot(entry: Dictionary) -> PanelContainer:
-	var key: String = entry["key"]
-	var item_name: String = entry["name"]
-	var texture: Texture2D = entry["texture"]
-
-	var slot := PanelContainer.new()
-	slot.custom_minimum_size = SLOT_SIZE
-	slot.add_theme_stylebox_override("panel", _slot_box(false))
-
-	var margin := MarginContainer.new()
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 8)
-	slot.add_child(margin)
-
-	var box := VBoxContainer.new()
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 4)
-	margin.add_child(box)
-
-	if texture != null:
-		var icon := TextureRect.new()
-		icon.texture = texture
-		icon.custom_minimum_size = ICON_SIZE
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(icon)
-	else:
-		var letter := _label(item_name.substr(0, 1).to_upper(), 34)
-		letter.custom_minimum_size = ICON_SIZE
-		letter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		letter.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		letter.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(letter)
-
-	var name_label := _label(item_name, 14)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.custom_minimum_size = Vector2(88, 0)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(name_label)
-
-	var button := Button.new()
-	button.focus_mode = Control.FOCUS_NONE
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	button.pressed.connect(_on_slot_pressed.bind(key))
-	button.mouse_entered.connect(func() -> void: slot.modulate = Color(1.12, 1.12, 1.12))
-	button.mouse_exited.connect(func() -> void: slot.modulate = Color.WHITE)
-	slot.add_child(button)
-	return slot
+func _style_tab(btn: Button, selected: bool) -> void:
+	btn.custom_minimum_size = Vector2(170, 42)
+	btn.add_theme_font_override("font", MENU_FONT)
+	btn.add_theme_font_size_override("font_size", 20)
+	var text_color := DARK_TEXT if selected else Color.WHITE
+	btn.add_theme_color_override("font_color", text_color)
+	btn.add_theme_color_override("font_hover_color", DARK_TEXT)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	var normal_bg := GREEN if selected else CARD_BG
+	var normal_border := Color.WHITE if selected else Color(0.45, 0.48, 0.52)
+	btn.add_theme_stylebox_override("normal", _box(normal_bg, 10, 3, normal_border))
+	btn.add_theme_stylebox_override("hover", _box(GREEN_HOVER, 10, 3, Color.WHITE))
+	btn.add_theme_stylebox_override("pressed", _box(GREEN_DARK, 10, 3, Color.WHITE))
+	btn.add_theme_stylebox_override("focus", _box(Color(0, 0, 0, 0), 10, 3, Color.WHITE))
