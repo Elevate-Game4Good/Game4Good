@@ -1,5 +1,6 @@
 extends CanvasLayer
 const PlayerScript = preload("res://Scripts/PlayerScript.gd")
+const MAIN_MENU_SCENE := "res://Scenes/Menu/menu.tscn"
 
 @onready var settings_button = get_node_or_null("SettingsButton")
 @onready var settings_menu = $SettingsMenu
@@ -137,15 +138,17 @@ func _on_save_game_pressed() -> void:
 func _on_save_and_exit_pressed() -> void:
 	var success := SaveManager.save_game()
 	if not success:
-		_set_save_status("Save failed. The game was not closed.", false)
+		_set_save_status("Save failed. Please try again.", false)
 		return
-	_set_save_status("Game saved. Exiting...", true)
+	_set_save_status("Game saved. Returning to main menu...", true)
 	if _settings_input_locked:
 		QuestState.pop_interaction_input_lock()
 		_settings_input_locked = false
 	menu_open = false
 	get_tree().paused = false
-	get_tree().quit()
+	var change_error := get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+	if change_error != OK:
+		_set_save_status("Game saved, but the main menu could not be opened.", false)
 
 
 func _set_save_status(message: String, success: bool) -> void:
